@@ -50,14 +50,14 @@ function App() {
                 <BlurFadeText
                   className="max-w-[580px] md:text-xl"
                   delay={BLUR_FADE_DELAY}
-                  text="✦ Software Engineering student with a passion for building scalable full-stack applications."
+                  text="✦ Experienced Software Engineer focused on TypeScript and Python, with a growing passion for AI and Backend Engineering."
                 />
               </div>
               <BlurFade delay={BLUR_FADE_DELAY}>
                 <Avatar className="size-28 border">
                   <AvatarImage
                     alt="Muhammad Ziyad Hasan"
-                    src="https://i.pinimg.com/1200x/e5/9b/9e/e59b9e057f0ec9bdc2a88d7ae97efa3e.jpg"
+                    src="https://avatars.githubusercontent.com/u/179559260?s=400&u=676831c7be288dd9f8f97ef9607d476f7ccb7194&v=4"
                   />
                   <AvatarFallback>Z</AvatarFallback>
                 </Avatar>
@@ -81,11 +81,12 @@ function App() {
           </BlurFade>
           <BlurFade delay={BLUR_FADE_DELAY * 3}>
             <div className="prose max-w-full text-pretty text-sm text-muted-foreground dark:prose-invert">
-              Software Engineering student with a passion for building scalable
-              full-stack applications. I specialize in crafting robust backend
-              systems and modern, modular user interfaces. Always exploring new
-              tech, from cloud infrastructure to AI integration, to build
-              solutions that actually matter.
+              Experienced Software Engineer focused on TypeScript and Python,
+              with a growing passion for AI and Backend Engineering. I specialize
+              in crafting robust backend systems, APIs, and infrastructure, while
+              still being able to ship full-stack features when needed. Always
+              exploring new tech, from cloud infrastructure to AI integration, to
+              build solutions that actually matter.
             </div>
           </BlurFade>
         </section>

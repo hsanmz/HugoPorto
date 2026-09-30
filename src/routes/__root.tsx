@@ -48,7 +48,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { rel: 'stylesheet', href: appCss },
       {
         rel: 'icon',
-        href: 'https://i.pinimg.com/1200x/e5/9b/9e/e59b9e057f0ec9bdc2a88d7ae97efa3e.jpg',
+        href: 'https://avatars.githubusercontent.com/u/179559260?s=400&u=676831c7be288dd9f8f97ef9607d476f7ccb7194&v=4',
         type: 'image/jpeg',
       },
       { rel: 'apple-touch-icon', href: '/logo192.png' },
