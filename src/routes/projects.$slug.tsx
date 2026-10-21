@@ -50,23 +50,46 @@ export const Route = createFileRoute('/projects/$slug')({
 
 const DELAY = 0.04;
 
-function MermaidCode({ children, className }: { children?: React.ReactNode; className?: string }) {
-  const ref = useRef<HTMLPreElement>(null);
-  const isMermaid = className?.includes('language-mermaid');
+function MermaidDiagram({ code }: { code: string }) {
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isMermaid && ref.current && typeof window !== 'undefined') {
-      import('mermaid').then((m) => {
-        const mermaid = m.default ?? m;
-        mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
-        mermaid.run({ nodes: [ref.current!] }).catch(() => {});
-      });
-    }
-  }, [isMermaid]);
+    if (typeof window === 'undefined') return;
 
+    // Load mermaid from CDN via script tag
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    script.type = 'module';
+    script.onload = async () => {
+      try {
+        const mermaidLib = (window as any).mermaid;
+        mermaidLib.initialize({ startOnLoad: false, securityLevel: 'loose' });
+        if (ref.current) {
+          ref.current.innerHTML = code;
+          await mermaidLib.run({ nodes: [ref.current] });
+        }
+      } catch {
+        // silently fail
+      }
+    };
+    document.head.appendChild(script);
+
+    return () => {
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+  }, [code]);
+
+  return <div ref={ref} className="mermaid" />;
+}
+
+function CodeBlock({ children, className, ...props }: { children?: React.ReactNode; className?: string; [key: string]: any }) {
+  const classStr = className || '';
+  if (classStr.includes('language-mermaid')) {
+    return <MermaidDiagram code={String(children)} />;
+  }
   return (
-    <pre ref={ref} className={className}>
-      <code className={className}>{children}</code>
+    <pre {...props} className={classStr}>
+      <code className={classStr}>{children}</code>
     </pre>
   );
 }
@@ -137,7 +160,7 @@ function RouteComponent() {
             <Markdown
               remarkPlugins={[remarkGfm]}
               components={{
-                code: MermaidCode,
+                code: CodeBlock,
               }}
             >
               {project.content}
