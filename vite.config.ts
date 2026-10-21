@@ -58,6 +58,9 @@ export default defineConfig({
       external: ['mermaid'],
     },
   },
+  optimizeDeps: {
+    include: ['mermaid'],
+  },
   server: {
     allowedHosts: ['local.iyansr.id'],
     port: 2718,
