@@ -67,6 +67,8 @@ function toWebRepoUrl(apiUrl: string): string {
     'https://github.com/'
   );
 }
+
+function truncateDescription(
   text: string | undefined,
   maxLines: number = 2
 ): string {
