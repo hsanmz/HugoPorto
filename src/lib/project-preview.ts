@@ -1,20 +1,6 @@
 const SCREENSHOT_WIDTH = 1200;
 const SCREENSHOT_HEIGHT = 630;
 
-const GITHUB_REPO_RE =
-  /^https?:\/\/(?:www\.)?github\.com\/([^/]+)\/([^/?#]+)/i;
-
-function getGithubOgImage(url: string): string | undefined {
-  const match = url.match(GITHUB_REPO_RE);
-  if (!match) return undefined;
-
-  const [, owner, repo] = match;
-  return `https://opengraph.githubassets.com/HEAD/${owner}/${repo.replace(
-    /\.git$/i,
-    ''
-  )}`;
-}
-
 function getScreenshotUrl(url: string): string {
   return `https://api.microlink.io/?url=${encodeURIComponent(
     url
@@ -28,12 +14,9 @@ function getThumIoUrl(url: string): string {
 /**
  * Returns candidate preview image URLs for a project, in priority order.
  *
- * - An explicit `image` always wins.
- * - GitHub-only projects use GitHub's repository OG card (not a screenshot of
- *   the github.com page), since there is no deployed site to preview.
- * - Projects with a live URL get a rendered screenshot of their front page.
- *
- * Later entries are fallbacks used when the previous image fails to load.
+ * An explicit `image` wins. Otherwise the card screenshots the live project
+ * URL. A GitHub repository is not a project preview, so those links return no
+ * image. Later entries are fallbacks used when the previous image fails.
  */
 export function getProjectPreviewSources(
   href?: string,
@@ -43,11 +26,7 @@ export function getProjectPreviewSources(
 
   const target = href?.trim();
   if (!target || !/^https?:\/\//i.test(target)) return [];
-
-  const githubOgImage = getGithubOgImage(target);
-  if (githubOgImage) {
-    return [githubOgImage, getScreenshotUrl(target), getThumIoUrl(target)];
-  }
+  if (/^https?:\/\/(?:www\.)?github\.com\//i.test(target)) return [];
 
   return [getScreenshotUrl(target), getThumIoUrl(target)];
 }

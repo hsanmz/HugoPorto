@@ -50,7 +50,7 @@ function App() {
                 <BlurFadeText
                   className="max-w-[580px] md:text-xl"
                   delay={BLUR_FADE_DELAY}
-                  text="✦ Experienced Software Engineer focused on TypeScript and Python, with a growing passion for AI and Backend Engineering."
+                  text="Software engineer working with TypeScript and Python. I build backends, APIs, and the infrastructure around them, and I ship the frontend when a project needs one."
                 />
               </div>
               <BlurFade delay={BLUR_FADE_DELAY}>
@@ -71,7 +71,7 @@ function App() {
             rel="noopener noreferrer"
           >
             <Button className="mt-4" size="sm">
-              Book a Call
+              Schedule a call
             </Button>
           </a>
         </section>
@@ -81,12 +81,11 @@ function App() {
           </BlurFade>
           <BlurFade delay={BLUR_FADE_DELAY * 3}>
             <div className="prose max-w-full text-pretty text-sm text-muted-foreground dark:prose-invert">
-              Experienced Software Engineer focused on TypeScript and Python,
-              with a growing passion for AI and Backend Engineering. I specialize
-              in crafting robust backend systems, APIs, and infrastructure, while
-              still being able to ship full-stack features when needed. Always
-              exploring new tech, from cloud infrastructure to AI integration, to
-              build solutions that actually matter.
+              I work mostly in TypeScript and Python. My work is usually
+              backend: APIs, databases, authentication, deployment, and the
+              parts that keep a service running. I also build the frontend when
+              a project needs one. I write down how a system is put together so
+              the next person can run it without reading every file.
             </div>
           </BlurFade>
         </section>
@@ -124,14 +123,14 @@ function App() {
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
                 <div className="inline-block rounded-lg bg-foreground text-background px-3 py-1 text-sm">
-                  Work
+                  Projects
                 </div>
                 <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">
-                  My Projects and Contributions
+                  Selected projects
                 </h2>
                 <p className="text-muted-foreground text-sm md:text-base/relaxed">
-                  I&apos;ve delivered impactful enterprise solutions and
-                  customer-facing applications that drive business value.
+                  How each system is put together, from the frontend to the
+                  queue and the database.
                 </p>
               </div>
             </div>

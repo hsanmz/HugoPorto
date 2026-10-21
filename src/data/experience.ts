@@ -13,20 +13,20 @@ export const EXPERIENCE: Experience[] = [
   {
     company: 'PT Pangestu Suryaning Famili',
     companyUrl: 'https://pangestu-sf.com/',
-    dates: 'Mar 2026 — Present',
+    dates: 'Mar 2026 - Present',
     description:
-      'Built a web-based Corporate Payroll Management System using Laravel 11. Automated employee data management, tracked attendance, and processed monthly salary distributions efficiently.',
+      'Built the payroll system for PT Pangestu Suryaning Famili in Laravel 11 and MySQL. Staff manage employee records, record attendance, and run monthly salary distributions from one admin panel.',
     location: 'Bekasi - Sentra Kota Jati Bening',
     logo: '/images/logos/pangestu.jpg',
     technologies: ['PHP', 'JavaScript', 'Laravel', 'Tailwind', 'WebSocket', 'MySQL'],
-    title: 'FullStack Developer',
+    title: 'Full Stack Developer',
   },
   {
     company: 'Crossing Hurdles',
     companyUrl: 'https://www.linkedin.com/company/crossing-hurdles/',
-    dates: 'Jan 2026 — Mar 2026',
+    dates: 'Jan 2026 - Mar 2026',
     description:
-      'SwarmBench Task Engineer SWE. Built multi-agent benchmark tasks based on real-world open-source code changes such as bug fixes, migrations, and refactors. Designed and implemented Python-based verification scripts to validate correctness of agent-generated code changes.',
+      "Built multi-agent benchmark tasks for SwarmBench from real open-source changes such as bug fixes, migrations, and refactors. Wrote Python verification scripts that check whether an agent's code change is correct.",
     location: 'Remote',
     logo: 'https://crossinghurdles.com/logo.svg',
     technologies: ['Python', 'Docker', 'AI/ML', 'CI/CD'],

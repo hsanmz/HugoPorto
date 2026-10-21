@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import Markdown from 'react-markdown';
 
@@ -47,6 +46,41 @@ export function ProjectCard({
   const previewSources = getProjectPreviewSources(href, image);
   const [previewIndex, setPreviewIndex] = useState(0);
   const previewSrc = previewSources[previewIndex];
+  const hasLink = Boolean(href);
+
+  const media = (
+    <>
+      {video && (
+        <video
+          src={video}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="pointer-events-none mx-auto h-40 w-full object-cover object-top" // needed because random black line at bottom of video
+        />
+      )}
+      {previewSrc && (
+        <img
+          src={previewSrc}
+          alt={`${title} preview`}
+          width={500}
+          height={300}
+          loading="lazy"
+          decoding="async"
+          onError={() => setPreviewIndex((index) => index + 1)}
+          className="h-40 w-full overflow-hidden object-cover object-top rounded-t-lg"
+        />
+      )}
+      {!video && !previewSrc && (
+        <div className="flex h-40 w-full items-center justify-center rounded-t-lg border-b border-muted/50 bg-muted/15 px-6">
+          <span className="text-center text-lg font-semibold tracking-tight text-muted-foreground/70">
+            {title}
+          </span>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <Card
@@ -54,33 +88,18 @@ export function ProjectCard({
         'flex flex-col overflow-hidden bg-background/30 backdrop-blur-xl border border-muted/75 gap-2 p-1 hover:shadow-lg transition-all duration-300 ease-out rounded-lg'
       }
     >
-      <Link
-        to={(href || '#') as string}
-        className={cn('block cursor-pointer', className)}
-      >
-        {video && (
-          <video
-            src={video}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="pointer-events-none mx-auto h-40 w-full object-cover object-top" // needed because random black line at bottom of video
-          />
-        )}
-        {previewSrc && (
-          <img
-            src={previewSrc}
-            alt={`${title} preview`}
-            width={500}
-            height={300}
-            loading="lazy"
-            decoding="async"
-            onError={() => setPreviewIndex((index) => index + 1)}
-            className="h-40 w-full overflow-hidden object-cover object-top rounded-t-lg"
-          />
-        )}
-      </Link>
+      {hasLink && href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn('block cursor-pointer', className)}
+        >
+          {media}
+        </a>
+      ) : (
+        <div className={cn('block', className)}>{media}</div>
+      )}
       <CardHeader className="px-2">
         <div className="space-y-1">
           <div className="flex">
@@ -124,7 +143,12 @@ export function ProjectCard({
         {links && links.length > 0 && (
           <div className="flex flex-row flex-wrap items-start gap-1">
             {links?.map((link, idx) => (
-              <a href={link?.href} key={idx} target="_blank">
+              <a
+                href={link?.href}
+                key={idx}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Badge key={idx} className="flex gap-2 px-2 py-1 text-[10px]">
                   {link.icon}
                   {link.type}

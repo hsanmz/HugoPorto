@@ -13,10 +13,11 @@ export const EDUCATION: Education[] = [
     institution: 'Devscale Indonesia',
     type: 'Non-Formal',
     program: 'AI-Enabled Python Web Dev',
-    year: 'Jan 2026 — May 2026',
+    year: 'Jan 2026 - May 2026',
     location: 'Online',
     logo: '/images/logos/devscale.png',
-    details: '10-week intensive program covering FastAPI, AI Integration, RAG Systems, and Production Deployment. Built Luminaprep as final project.',
+    details:
+      '10-week program on FastAPI, AI integration, RAG systems, and production deployment. Built LuminaPrep as the final project.',
   },
   {
     institution: 'SMK Informatika Bisnis',
@@ -25,6 +26,7 @@ export const EDUCATION: Education[] = [
     year: 'Graduated',
     location: 'Bekasi',
     logo: '/images/logos/smk.jpg',
-    details: 'Vocational program in Computer and Network Engineering covering network administration, system configuration, and IT infrastructure.',
+    details:
+      'Studied network administration, system configuration, and IT infrastructure.',
   },
 ];

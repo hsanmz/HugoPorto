@@ -29,7 +29,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         name: 'description',
         content:
-          'Muhammad Ziyad Hasan is a software engineer with a passion for building scalable full-stack applications.',
+          'Portfolio of Muhammad Ziyad Hasan, a software engineer working with TypeScript, Python, Laravel, and React. Notes on backend systems, APIs, and deployment.',
       },
       {
         title: 'Muhammad Ziyad Hasan - Software Engineer',
