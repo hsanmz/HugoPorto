@@ -1,16 +1,15 @@
-import type { ReactNode } from 'react';
-import type { QueryClient } from '@tanstack/react-query';
+import { type QueryClient } from '@tanstack/react-query';
 import {
   createRootRouteWithContext,
   HeadContent,
   Outlet,
   Scripts,
 } from '@tanstack/react-router';
-
-import appCss from '@/styles.css?url';
+import { type ReactNode } from 'react';
 
 import { AppDock } from '@/components/app-dock';
 import DarkVeil from '@/components/dark-veil';
+import appCss from '@/styles.css?url';
 
 interface MyRouterContext {
   queryClient: QueryClient;

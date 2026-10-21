@@ -56,7 +56,17 @@ function formatDate(dateString: string): string {
   }
 }
 
-function truncateDescription(
+/**
+ * Converts a GitHub REST API repository URL to a browser-accessible web URL.
+ *
+ * e.g. https://api.github.com/repos/owner/repo → https://github.com/owner/repo
+ */
+function toWebRepoUrl(apiUrl: string): string {
+  return apiUrl.replace(
+    /^https:\/\/api\.github\.com\/repos\//,
+    'https://github.com/'
+  );
+}
   text: string | undefined,
   maxLines: number = 2
 ): string {
@@ -107,7 +117,7 @@ export function ContributionCard({ contribution, className }: Props) {
     >
       <CardHeader className="p-2">
         <div className="flex items-center justify-between">
-          <a href={repositoryUrl} target="_blank" rel="noopener noreferrer">
+          <a href={toWebRepoUrl(repositoryUrl)} target="_blank" rel="noopener noreferrer">
             <CardTitle className="text-sm font-medium text-muted-foreground hover:underline">
               {repository}
             </CardTitle>

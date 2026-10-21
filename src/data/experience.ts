@@ -18,7 +18,14 @@ export const EXPERIENCE: Experience[] = [
       'Built the payroll system for PT Pangestu Suryaning Famili in Laravel 11 and MySQL. Staff manage employee records, record attendance, and run monthly salary distributions from one admin panel.',
     location: 'Bekasi - Sentra Kota Jati Bening',
     logo: '/images/logos/pangestu.jpg',
-    technologies: ['PHP', 'JavaScript', 'Laravel', 'Tailwind', 'WebSocket', 'MySQL'],
+    technologies: [
+      'PHP',
+      'JavaScript',
+      'Laravel',
+      'Tailwind',
+      'WebSocket',
+      'MySQL',
+    ],
     title: 'Full Stack Developer',
   },
   {

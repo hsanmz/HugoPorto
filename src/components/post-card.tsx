@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 import Markdown from 'react-markdown';
 
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,16 +29,30 @@ export function PostCard({
   video,
   className,
 }: Props) {
+  // Blog post hrefs are internal paths like /blog/my-slug. Use a plain <a> so
+  // we don't have to cast the string to a TanStack Router typed path.
+  const CardLink = ({
+    children,
+    className: linkClassName,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) =>
+    href ? (
+      <a href={href} className={linkClassName}>
+        {children}
+      </a>
+    ) : (
+      <div className={linkClassName}>{children}</div>
+    );
+
   return (
     <Card
       className={
         'flex flex-col gap-0 p-0 overflow-hidden bg-background/30 backdrop-blur-xl border border-muted/75 hover:shadow-lg transition-all duration-300 ease-out h-full'
       }
     >
-      <Link
-        to={(href || '#') as string}
-        className={cn('block cursor-pointer', className)}
-      >
+      <CardLink className={cn('block cursor-pointer', className)}>
         {video && (
           <video
             src={video}
@@ -59,7 +72,7 @@ export function PostCard({
             className="h-40 w-full overflow-hidden object-cover object-top"
           />
         )}
-      </Link>
+      </CardLink>
       <CardHeader className="px-3 py-2">
         <div className="space-y-1">
           <CardTitle className="mt-1 text-base">{title}</CardTitle>
@@ -78,21 +91,6 @@ export function PostCard({
           </div>
         </div>
       </CardHeader>
-      {/* <CardContent className="mt-auto flex flex-col px-2">
-        {tags && tags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {tags?.map((tag) => (
-              <Badge
-                className="px-1 py-0 text-[10px]"
-                variant="secondary"
-                key={tag}
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </CardContent> */}
     </Card>
   );
 }

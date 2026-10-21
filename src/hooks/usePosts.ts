@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { BlogPost } from '../lib/post';
-import { getAllPosts, getPostsMetadata } from '../lib/post';
+import { type BlogPost, getAllPosts, getPostsMetadata } from '../lib/post';
 
 export interface UsePostsOptions {
   showContent?: boolean;
@@ -26,10 +25,11 @@ export const usePosts = ({
         setLoading(true);
         setError(null);
 
-        const fetchedPosts = showContent ? await getAllPosts() : [];
-
-        if (!showContent) {
-          // If we only need metadata, use getPostsMetadata for better performance
+        if (showContent) {
+          const fetchedPosts = await getAllPosts();
+          setPosts(fetchedPosts);
+        } else {
+          // Only need metadata — cheaper than loading full content
           const metadata = await getPostsMetadata();
           const postsWithEmptyContent = metadata.map((meta) => ({
             slug: meta.slug,
@@ -42,8 +42,6 @@ export const usePosts = ({
             content: '',
           }));
           setPosts(postsWithEmptyContent);
-        } else {
-          setPosts(fetchedPosts);
         }
       } catch (err) {
         setError('Failed to load blog posts');

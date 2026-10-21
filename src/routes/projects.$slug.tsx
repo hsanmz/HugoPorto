@@ -5,9 +5,9 @@ import {
   useLoaderData,
 } from '@tanstack/react-router';
 import { ChevronLeft, ExternalLink } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useEffect, useRef } from 'react';
 
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { Badge } from '@/components/ui/badge';
@@ -50,53 +50,110 @@ export const Route = createFileRoute('/projects/$slug')({
 
 const DELAY = 0.04;
 
-function MermaidDiagram({ code }: { code: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // Load mermaid from CDN via script tag
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-    script.type = 'module';
-    script.onload = async () => {
-      try {
-        const mermaidLib = (window as any).mermaid;
-        mermaidLib.initialize({ startOnLoad: false, securityLevel: 'loose' });
-        if (ref.current) {
-          ref.current.innerHTML = code;
-          await mermaidLib.run({ nodes: [ref.current] });
-        }
-      } catch {
-        // silently fail
-      }
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      if (script.parentNode) script.parentNode.removeChild(script);
-    };
-  }, [code]);
-
-  return <div ref={ref} className="mermaid" />;
+interface MermaidAPI {
+  initialize: (config: {
+    startOnLoad: boolean;
+    securityLevel: string;
+    theme: string;
+  }) => void;
+  run: (options: { nodes: HTMLElement[] }) => Promise<void>;
 }
 
-function CodeBlock({ children, className, ...props }: { children?: React.ReactNode; className?: string; [key: string]: any }) {
-  const classStr = className || '';
-  if (classStr.includes('language-mermaid')) {
-    return <MermaidDiagram code={String(children)} />;
+// React-Markdown calls `pre` for fenced blocks and passes the <code> element
+// as children. We intercept `pre` so we can handle mermaid diagrams while
+// letting the default <code> child render normally for everything else.
+function CodeBlock({
+  children,
+  className,
+  style,
+}: React.ComponentPropsWithoutRef<'pre'> & { children?: React.ReactNode }) {
+  // Check if the direct child code element has a mermaid language class
+  const childEl =
+    children as React.ReactElement<
+      React.ComponentPropsWithoutRef<'code'>
+    > | null;
+  const codeClassName = childEl?.props?.className ?? className ?? '';
+
+  if (String(codeClassName).includes('language-mermaid')) {
+    const codeContent = String(childEl?.props?.children ?? '');
+    return (
+      <div
+        className="my-4 rounded-lg border border-muted/50 bg-muted/10 p-4"
+        data-mermaid-code={codeContent}
+        style={style as React.CSSProperties}
+      />
+    );
   }
+
+  // For all other languages, render the pre tag and let children (the <code>
+  // element produced by react-markdown) render untouched.
   return (
-    <pre {...props} className={classStr}>
-      <code className={classStr}>{children}</code>
+    <pre className={className} style={style as React.CSSProperties}>
+      {children}
     </pre>
   );
 }
 
 function RouteComponent() {
   const { project } = useLoaderData({ from: '/projects/$slug' });
+  const articleRef = useRef<HTMLDivElement>(null);
 
+  // Initialize mermaid diagrams after render.
+  // Uses dynamic import() — mermaid is an ES module and does not expose itself
+  // on window, so the previous script-tag + window.mermaid approach never ran.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !articleRef.current) return;
+
+    const mermaidElements = Array.from(
+      articleRef.current.querySelectorAll<HTMLElement>('[data-mermaid-code]')
+    );
+    if (mermaidElements.length === 0) return;
+
+    // Detect current color scheme so diagrams match the site theme.
+    const isDark = document.documentElement.classList.contains('dark');
+    const mermaidTheme = isDark ? 'dark' : 'default';
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { default: mermaid } = (await import(
+          /* @vite-ignore */
+          'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
+        )) as { default: MermaidAPI };
+
+        if (cancelled) return;
+
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'loose',
+          theme: mermaidTheme,
+        });
+
+        for (const el of mermaidElements) {
+          const code = el.getAttribute('data-mermaid-code');
+          if (!code) continue;
+          el.innerHTML = code;
+          el.classList.add('mermaid');
+          await mermaid.run({ nodes: [el] });
+
+          // Force the generated SVG to fit its container — never overflow.
+          const svg = el.querySelector('svg');
+          if (svg) {
+            svg.style.maxWidth = '100%';
+            svg.style.height = 'auto';
+            svg.removeAttribute('width');
+          }
+        }
+      } catch {
+        // Non-fatal — diagram containers remain visible but empty.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   return (
     <div>
       <BlurFade delay={DELAY}>
@@ -156,11 +213,14 @@ function RouteComponent() {
         </BlurFade>
 
         <BlurFade delay={DELAY * 3}>
-          <article className="prose text-pretty dark:prose-invert">
+          <article
+            ref={articleRef}
+            className="prose text-pretty dark:prose-invert"
+          >
             <Markdown
               remarkPlugins={[remarkGfm]}
               components={{
-                code: CodeBlock,
+                pre: CodeBlock,
               }}
             >
               {project.content}

@@ -10,18 +10,16 @@ Queues run per period, such as per day or per service session. Each period needs
 
 ```mermaid
 graph TD
-    SC[Staff Console<br/>React + Vite]
-    PD[Public Display<br/>React + Vite]
+    SC["Staff Console\nReact + Vite"]
+    PD["Public Display\nReact + Vite"]
 
-    SC --> SBC[Supabase Client<br/>realtime + REST]
+    SC --> SBC["Supabase Client\nrealtime + REST"]
     PD --> SBC
 
-    SBC --> SP[Supabase Platform]
-
-    subgraph Supabase Platform
-        DB[(Postgres Database<br/>Periods, Queues, Numbers, Status, Config)]
-        RS[Realtime Subscriptions<br/>Queue changes, Status moves, New entries, Reordering]
-        AUTH[Auth + Row Level Security<br/>Staff R/W, Display R]
+    subgraph Supabase
+        DB[("Postgres\nPeriods, Queues, Numbers, Status")]
+        RS["Realtime Subscriptions\nQueue changes, Status moves"]
+        AUTH["Auth + Row Level Security\nStaff R/W, Display R"]
     end
 
     SBC --> DB

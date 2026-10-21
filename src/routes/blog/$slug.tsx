@@ -33,7 +33,7 @@ export const Route = createFileRoute('/blog/$slug')({
         content: loaderData?.post?.metadata.summary,
       },
       {
-        title: `${loaderData?.post?.metadata.title} | Iyan Saputra`,
+        title: `${loaderData?.post?.metadata.title} | Muhammad Ziyad Hasan`,
       },
       {
         name: 'og:title',
@@ -43,10 +43,9 @@ export const Route = createFileRoute('/blog/$slug')({
         name: 'og:description',
         content: loaderData?.post?.metadata.summary,
       },
-      {
-        name: 'og:image',
-        content: loaderData?.post?.metadata.image,
-      },
+      ...(loaderData?.post?.metadata.image
+        ? [{ name: 'og:image', content: loaderData.post.metadata.image }]
+        : []),
       {
         name: 'twitter:title',
         content: loaderData?.post?.metadata.title,
@@ -74,11 +73,13 @@ function RouteComponent() {
       <div className="bg-background/40 backdrop-blur-3xl border border-muted/75 p-4 rounded-lg">
         <BlurFade delay={DELAY * 2}>
           <div className="mb-6 space-y-4">
-            <img
-              src={post?.metadata.image}
-              alt={post?.metadata.title}
-              className="w-full rounded-lg"
-            />
+            {post?.metadata.image && (
+              <img
+                src={post.metadata.image}
+                alt={post.metadata.title}
+                className="w-full rounded-lg"
+              />
+            )}
 
             <h1 className="text-3xl font-bold mt-6">{post?.metadata.title}</h1>
             <time className="text-sm text-muted-foreground">
@@ -99,7 +100,7 @@ function RouteComponent() {
                       // {...rest}
                       PreTag="div"
                       language={match[1]}
-                      style={vesperTheme as any}
+                      style={vesperTheme}
                     >
                       {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>

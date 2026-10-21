@@ -175,54 +175,54 @@ function App() {
         </BlurFade> */}
         </section>
         {posts.length > 0 && (
-        <section id="posts" className="mt-4">
-          <BlurFade
-            delay={BLUR_FADE_DELAY * 12 + EXPERIENCE.length * 0.05}
-            className="mb-4"
-          >
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-foreground text-background px-3 py-1 text-sm">
-                  Blog Posts
+          <section id="posts" className="mt-4">
+            <BlurFade
+              delay={BLUR_FADE_DELAY * 12 + EXPERIENCE.length * 0.05}
+              className="mb-4"
+            >
+              <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                <div className="space-y-2">
+                  <div className="inline-block rounded-lg bg-foreground text-background px-3 py-1 text-sm">
+                    Blog Posts
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">
+                    Check out my latest blog posts
+                  </h2>
+                  <p className="text-muted-foreground text-sm md:text-base/relaxed">
+                    I&apos;ve written a variety of blog posts, from technical
+                    tutorials to personal stories.
+                  </p>
                 </div>
-                <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl">
-                  Check out my latest blog posts
-                </h2>
-                <p className="text-muted-foreground text-sm md:text-base/relaxed">
-                  I&apos;ve written a variety of blog posts, from technical
-                  tutorials to personal stories.
-                </p>
               </div>
-            </div>
-          </BlurFade>
-          <BlurFade delay={BLUR_FADE_DELAY * 13 + EXPERIENCE.length * 0.05}>
-            <div className="grid md:grid-cols-2 gap-4">
-              {posts.map((post) => (
-                <PostCard
-                  key={post.slug}
-                  title={post.metadata.title}
-                  href={`/blog/${post.slug}`}
-                  description={post.metadata.summary}
-                  dates={post.metadata.publishedAt}
-                  image={post.metadata.image}
-                />
-              ))}
-            </div>
-          </BlurFade>
-          <BlurFade delay={BLUR_FADE_DELAY * 14}>
-            <div className="flex justify-center mt-4">
-              <Link to="/blog">
-                <Button
-                  size="sm"
-                  variant="link"
-                  className="text-muted-foreground"
-                >
-                  View More <ChevronRightIcon />
-                </Button>
-              </Link>
-            </div>
-          </BlurFade>
-        </section>
+            </BlurFade>
+            <BlurFade delay={BLUR_FADE_DELAY * 13 + EXPERIENCE.length * 0.05}>
+              <div className="grid md:grid-cols-2 gap-4">
+                {posts.map((post) => (
+                  <PostCard
+                    key={post.slug}
+                    title={post.metadata.title}
+                    href={`/blog/${post.slug}`}
+                    description={post.metadata.summary}
+                    dates={post.metadata.publishedAt}
+                    image={post.metadata.image}
+                  />
+                ))}
+              </div>
+            </BlurFade>
+            <BlurFade delay={BLUR_FADE_DELAY * 14}>
+              <div className="flex justify-center mt-4">
+                <Link to="/blog">
+                  <Button
+                    size="sm"
+                    variant="link"
+                    className="text-muted-foreground"
+                  >
+                    View More <ChevronRightIcon />
+                  </Button>
+                </Link>
+              </div>
+            </BlurFade>
+          </section>
         )}
         <section id="skills" className="mt-4">
           <BlurFade delay={BLUR_FADE_DELAY * 15} className="mb-4">
@@ -242,24 +242,34 @@ function App() {
           </BlurFade>
           <BlurFade delay={BLUR_FADE_DELAY * 16}>
             <div className="space-y-4">
-              {(['Languages', 'Frameworks', 'Databases', 'DevOps & Tools', 'Other'] as const).map(
-                (category) => {
-                  const categorySkills = SKILLS.filter((s) => s.category === category);
-                  if (categorySkills.length === 0) return null;
-                  return (
-                    <div key={category}>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-2">{category}</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {categorySkills.map((skill) => (
-                          <Badge key={skill.name} variant="secondary">
-                            {skill.name}
-                          </Badge>
-                        ))}
-                      </div>
+              {(
+                [
+                  'Languages',
+                  'Frameworks',
+                  'Databases',
+                  'DevOps & Tools',
+                  'Other',
+                ] as const
+              ).map((category) => {
+                const categorySkills = SKILLS.filter(
+                  (s) => s.category === category
+                );
+                if (categorySkills.length === 0) return null;
+                return (
+                  <div key={category}>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+                      {category}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categorySkills.map((skill) => (
+                        <Badge key={skill.name} variant="secondary">
+                          {skill.name}
+                        </Badge>
+                      ))}
                     </div>
-                  );
-                }
-              )}
+                  </div>
+                );
+              })}
             </div>
           </BlurFade>
         </section>
@@ -279,7 +289,10 @@ function App() {
           <BlurFade delay={BLUR_FADE_DELAY * 18}>
             <div className="flex min-h-0 flex-col gap-y-4">
               {EDUCATION.map((edu, id) => (
-                <BlurFade key={edu.institution} delay={BLUR_FADE_DELAY * 19 + id * 0.05}>
+                <BlurFade
+                  key={edu.institution}
+                  delay={BLUR_FADE_DELAY * 19 + id * 0.05}
+                >
                   <ExperienceCard
                     logoUrl={edu.logo ?? ''}
                     altText={edu.institution}

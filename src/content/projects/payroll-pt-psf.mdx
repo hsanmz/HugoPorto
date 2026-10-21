@@ -10,15 +10,15 @@ Payroll depends on attendance that must always be current. If attendance and sal
 
 ```mermaid
 graph TD
-    APP[Laravel 11 Application]
+    APP["Laravel 11 Application"]
 
     subgraph Modules
-        EMP[Employee Mgmt<br/>Profiles, Contracts, Positions, Grades]
-        ATT[Attendance<br/>Daily logs, Leaves, Overtime, Shifts]
-        PR[Payroll Engine<br/>Components, Allowances, Deductions, Tax, Period close]
-        RPT[Reporting<br/>Register, Tax reports, Summaries]
-        SET[Settings<br/>Pay grades, Components, Schedules, Holidays]
-        PS[Payslips<br/>PDF, Email, Export, Reprint]
+        EMP["Employee Mgmt\nProfiles, Contracts, Positions, Grades"]
+        ATT["Attendance\nDaily logs, Leaves, Overtime, Shifts"]
+        PR["Payroll Engine\nComponents, Allowances, Deductions, Tax"]
+        RPT["Reporting\nRegister, Tax reports, Summaries"]
+        SET["Settings\nPay grades, Components, Schedules, Holidays"]
+        PS["Payslips\nPDF, Email, Export, Reprint"]
     end
 
     APP --> EMP
@@ -28,7 +28,7 @@ graph TD
     APP --> SET
     APP --> PS
 
-    APP --> DB[(MySQL Database<br/>Employees, Attendance, Components, Runs, Payslips, Settings)]
+    APP --> DB[("MySQL Database\nEmployees, Attendance, Runs, Payslips")]
 ```
 
 One Laravel application owns the entire payroll domain. Employee data, attendance, salary components, payroll runs, and payslips all live in the same MySQL database. The admin panel is the single interface for every payroll task.

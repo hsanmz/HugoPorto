@@ -13,7 +13,7 @@ export const Route = createFileRoute('/blog/')({
         content: 'Check out my latest blog posts',
       },
       {
-        title: 'Blog | Iyan Saputra',
+        title: 'Blog | Muhammad Ziyad Hasan',
       },
     ],
   }),

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import type { BlogPost } from '../lib/post';
-import { getPostBySlug } from '../lib/post';
+import { type BlogPost, getPostBySlug } from '../lib/post';
 
 export interface UsePostReturn {
   post: BlogPost | null;

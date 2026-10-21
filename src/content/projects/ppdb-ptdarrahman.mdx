@@ -13,34 +13,38 @@ Two public routes must open without a login because they are scanned from QR cod
 ```mermaid
 graph TD
     subgraph Frontends
-        A[Candidate Portal<br/>React 19]
-        B[Committee Backoffice<br/>React 19]
-        C[Public Website<br/>Next.js]
-        D[Admin Panel<br/>React 19]
+        A["Candidate Portal\nReact 19"]
+        B["Committee Backoffice\nReact 19"]
+        C["Public Website\nNext.js"]
+        D["Admin Panel\nReact 19"]
     end
 
-    API[Core API (FastAPI)]
+    API["Core API\nFastAPI"]
+
     A --> API
     B --> API
     C --> API
     D --> API
 
-    subgraph Core
-        API --> REG[Registration]
-        API --> VER[Verification]
-        API --> EXM[Examination]
-        API --> SCH[Scheduling]
-        API --> PAY[Payments]
-        API --> DOC[Documents]
-        API --> AUTH[Auth & Sessions]
-        API --> RBAC[RBAC & Audit]
-        API --> SRCH[Search]
-        API --> PUB[Public Verify]
+    subgraph Modules
+        REG["Registration\n& Verification"]
+        EXM["Examination\n& Scheduling"]
+        PAY["Payments\n& Documents"]
+        ADM["Auth, RBAC\n& Public Verify"]
     end
 
-    API --> DB[(MySQL<br/>source of truth)]
-    API --> REDIS[(Redis<br/>cache, queue, sessions)]
-    API --> WA[WA Gateway<br/>BullMQ notify]
+    API --> REG
+    API --> EXM
+    API --> PAY
+    API --> ADM
+
+    DB[("MySQL\nsource of truth")]
+    REDIS[("Redis\ncache & sessions")]
+    WA["WA Gateway\nBullMQ"]
+
+    API --> DB
+    API --> REDIS
+    API --> WA
 ```
 
 The architecture centers on one API that owns all domain logic. Frontends are thin consumers. Background work (WhatsApp, scheduling) is offloaded to Redis and a dedicated gateway so the API stays fast. Public verification runs through read-only endpoints that require no session.

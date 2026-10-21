@@ -22,7 +22,7 @@ export const Route = createFileRoute('/open-source')({
 const BLUR_FADE_DELAY = 0.04;
 
 function RouteComponent() {
-  const { data: contributions } = useOpenSourceContributions();
+  const { data: contributions, isLoading, isError } = useOpenSourceContributions();
 
   return (
     <section className="mt-4">
@@ -44,31 +44,53 @@ function RouteComponent() {
       </BlurFade>
 
       <BlurFade delay={BLUR_FADE_DELAY * 2}>
-        <div className="grid grid-cols-1 gap-4">
-          {contributions?.map((c) => (
-            <ContributionCard
-              key={c.id}
-              contribution={{
-                created_at: c.created_at,
-                number: c.number,
-                title: c.title,
-                state: c.state,
-                html_url: c.html_url,
-                labels: c.labels,
-                id: c.id,
-                repository: c.repository,
-                repositoryUrl: c.repositoryUrl,
-                type: c.type as 'pr' | 'issue',
-                updated_at: c.updated_at,
-                user: {
-                  avatar_url: c.user?.avatar_url ?? '',
-                  html_url: c.user?.html_url ?? '',
-                  login: c.user?.login ?? '',
-                },
-              }}
-            />
-          ))}
-        </div>
+        {isLoading && (
+          <div className="flex justify-center py-12">
+            <span className="text-muted-foreground text-sm">Loading contributions...</span>
+          </div>
+        )}
+
+        {isError && (
+          <div className="flex justify-center py-12">
+            <span className="text-destructive text-sm">
+              Failed to load contributions. Please try again later.
+            </span>
+          </div>
+        )}
+
+        {!isLoading && !isError && contributions?.length === 0 && (
+          <div className="flex justify-center py-12">
+            <span className="text-muted-foreground text-sm">No contributions found.</span>
+          </div>
+        )}
+
+        {!isLoading && !isError && contributions && contributions.length > 0 && (
+          <div className="grid grid-cols-1 gap-4">
+            {contributions.map((c) => (
+              <ContributionCard
+                key={c.id}
+                contribution={{
+                  created_at: c.created_at,
+                  number: c.number,
+                  title: c.title,
+                  state: c.state,
+                  html_url: c.html_url,
+                  labels: c.labels,
+                  id: c.id,
+                  repository: c.repository,
+                  repositoryUrl: c.repositoryUrl,
+                  type: c.type as 'pr' | 'issue',
+                  updated_at: c.updated_at,
+                  user: {
+                    avatar_url: c.user?.avatar_url ?? '',
+                    html_url: c.user?.html_url ?? '',
+                    login: c.user?.login ?? '',
+                  },
+                }}
+              />
+            ))}
+          </div>
+        )}
       </BlurFade>
     </section>
   );

@@ -1,4 +1,9 @@
-export const vesperTheme = {
+import { type CSSProperties } from 'react';
+
+export const vesperTheme: Record<
+  string,
+  CSSProperties | Record<string, string>
+> = {
   'code[class*="language-"]': {
     color: '#FFF',
     background: '#101010',

@@ -70,7 +70,11 @@ export function ProjectCard({
           height={300}
           loading="lazy"
           decoding="async"
-          onError={() => setPreviewIndex((index) => index + 1)}
+          onError={() =>
+            setPreviewIndex((index) =>
+              index + 1 < previewSources.length ? index + 1 : index
+            )
+          }
           className="h-40 w-full overflow-hidden object-cover object-top rounded-t-lg"
         />
       )}
