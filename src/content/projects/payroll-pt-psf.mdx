@@ -1,22 +1,52 @@
-## What this is
+## Ringkas
 
-Payroll system for PT Pangestu Suryaning Famili, a corporate payroll tool that runs inside the company. The code is private, so these notes cover the architecture and the monthly flow instead of the source.
+Sistem payroll untuk PT Pangestu Suryaning Famili, dipakai internal perusahaan. Kode bersifat privat, jadi halaman ini memuat desain sistem dan alur bulanan, bukan source code.
 
-## How it is put together
+> Catatan: dokumen ini masih bertanda **Perlu dilengkapi**. Bagian yang kosong akan diisi setelah detail teknis proyek tersedia, dan tidak diisi dengan dugaan.
 
-One Laravel 11 application backed by MySQL. Employee records, attendance, and salary data live in the same database, and staff work from a single admin panel built with Tailwind CSS. Keeping attendance and salary runs in one app avoids moving records between separate systems.
+## Konteks dan batasan
 
-## Monthly flow
+Payroll bergantung pada absensi yang harus selalu terbaru. Kalau data kehadiran dan perhitungan gaji tersebar di dua sistem, dibutuhkan langkah sinkronisasi yang bisa gagal atau tertinggal. Batasan ini yang menentukan bentuk aplikasinya.
 
-1. Staff add or update employee records.
-2. Attendance is recorded during the month.
-3. At the end of the month, staff run salary distribution from the collected attendance.
-4. Payslips and summaries are produced from the same run.
+## Arsitektur
 
-## Why this shape
+Satu aplikasi Laravel 11 dengan MySQL sebagai basis data. Data karyawan, absensi, dan gaji berada di database yang sama, dan operator bekerja dari satu panel admin. Antarmuka memakai Tailwind CSS.
 
-Payroll depends on attendance being current. A single app means the calculation reads the same records the staff just edited, without a sync step between two services. The interface stays on the admin panel, so operators do not need to move between tools during a payroll run.
+```text
+   browser (operator)
+        |
+        v
++---------------------+        +------------------+
+|   Laravel 11 app    | <----> |      MySQL       |
+|   (admin panel)     |        | karyawan, absensi|
++---------------------+        | gaji, payslip    |
+                               +------------------+
+```
+
+## Alur bulanan
+
+1. Operator menambah atau memperbarui data karyawan.
+2. Absensi dicatat selama bulan berjalan.
+3. Di akhir bulan, operator menjalankan distribusi gaji dari absensi yang terkumpul.
+4. Payslip dan ringkasan dihasilkan dari run yang sama.
+
+## Keputusan Desain
+
+**Satu aplikasi, bukan dua service.** Perhitungan gaji membaca catatan yang baru saja diedit operator. Menyatukan absensi dan gaji dalam satu database menghilangkan langkah sinkronisasi antar service.
+
+**Satu panel admin.** Operator tidak perlu berpindah tools selama proses payroll berjalan.
+
+## Perlu dilengkapi
+
+Bagian berikut belum ada datanya dan akan diisi setelah dokumentasi proyek dibuat:
+
+- Skema tabel: karyawan, absensi, komponen gaji, periode payroll, payslip
+- Aturan perhitungan: komponen tetap, potongan, lembur, pajak (kalau ada)
+- Role dan permission operator
+- Penanganan koreksi: absensi yang diubah setelah payroll dijalankan
+- Format dan pengiriman payslip
+- Deployment dan backup database
 
 ## Status
 
-The system is live at PT Pangestu Suryaning Famili and used for monthly payroll.
+Sistem live di PT Pangestu Suryaning Famili dan dipakai untuk payroll bulanan.

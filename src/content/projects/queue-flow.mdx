@@ -1,15 +1,46 @@
-## What this is
+## Ringkas
 
-Queue management app for organizing queues by period. The code is not linked from this page, so these notes cover what the app does and how it is built.
+Aplikasi manajemen antrian yang mengelompokkan antrian per periode. Satu periode punya antriannya sendiri, dan petugas mengubahnya dari satu layar. Kode tidak ditautkan dari halaman ini, jadi isinya adalah desain sistem.
 
-## How it is put together
+> Catatan: dokumen ini masih bertanda **Perlu dilengkapi**. Bagian yang kosong akan diisi setelah detail teknis proyek tersedia, dan tidak diisi dengan dugaan.
 
-A Vite and React app on top of Supabase. Supabase provides the database and API, so the frontend runs without a separate backend service. The app is a static Vite build served from Vercel.
+## Konteks dan batasan
 
-## Data flow
+Antrian berjalan per periode, misalnya per hari atau per sesi layanan. Tiap periode perlu daftar sendiri, dan status tiap nomor berubah sepanjang hari. Untuk alat internal seperti ini, kebutuhan backend-nya tipis: baca, tulis, dan realtime.
 
-The browser reads and writes queue data through the Supabase client. Each period holds its own queue, so staff open the period they are working in and update it from one screen.
+## Arsitektur
 
-## Why this shape
+Frontend Vite dan React di atas Supabase. Supabase menyediakan database dan API, jadi tidak ada service backend terpisah. Build akhirnya statis dan disajikan dari Vercel.
 
-Supabase removes the need for a separate server for a small internal tool. The frontend holds the whole app, and the data layer stays managed, which keeps the deploy simple.
+```text
+   browser (petugas)          browser (layar antrian)
+        |                              |
+        +--------------+---------------+
+                       |
+                       v
+              +------------------+
+              |    Supabase      |
+              |  database + API  |
+              +------------------+
+```
+
+## Alur data
+
+Browser membaca dan menulis data antrian lewat klien Supabase. Tiap periode menyimpan antriannya sendiri, jadi petugas membuka periode yang sedang aktif dan memperbaruinya dari satu layar.
+
+## Keputusan Desain
+
+**Supabase, bukan server sendiri.** Untuk alat internal kecil, backend terpisah menambah beban operasional tanpa manfaat. Supabase menghilangkan kebutuhan itu dan membuat deploy tetap sederhana.
+
+**Frontend memegang seluruh aplikasi.** Data layer dikelola, jadi aplikasi cukup berupa build statis.
+
+## Perlu dilengkapi
+
+Bagian berikut belum ada datanya dan akan diisi setelah dokumentasi proyek dibuat:
+
+- Skema tabel: periode, antrian, nomor, status
+- Row Level Security dan aturan akses
+- Mekanisme update layar antrian: realtime subscription atau polling
+- Definisi status dan transisi (menunggu, dipanggil, selesai, lewat)
+- Penanganan nomor yang tidak hadir (no-show)
+- Reset dan penutupan periode

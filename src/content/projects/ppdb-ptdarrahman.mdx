@@ -1,43 +1,72 @@
-## What this is
+## Ringkas
 
-Admission portal and company profile for Pesantren Tahfidz Qur'an dan Digital Ar-Rahman. The repository holds both the public-facing site and the staff tools that run the admission cycle, so registration data, verification status, and published information come from one place.
+PPDB dan company profile untuk Pesantren Tahfidz Qur'an dan Digital Ar-Rahman. Satu repo menaungi website publik, portal pendaftaran santri, backoffice panitia, panel superadmin, dan WA gateway. Semua frontend membaca satu Core API, jadi status pendaftaran, keputusan panitia, dan konten publik berasal dari satu data model.
 
-## How it is put together
+## Konteks dan batasan
 
-The repo is a pnpm workspace managed by Turborepo. Several apps run behind one Docker network:
+Seleksi santri punya beberapa tahap yang saling mengunci: kuesioner kesehatan, verifikasi dokumen, ujian TIU, wawancara, pembayaran, lalu penerbitan dokumen resmi. Kalau tiap tahap disimpan di aplikasi terpisah, status peserta akan tersebar dan rawan tidak sinkron. Karena itu bentuknya monorepo dengan satu API pusat, bukan kumpulan service yang saling memanggil.
 
-| App | Stack | Role |
-| --- | --- | --- |
-| `apps/ppdb` | React 19, Vite | Candidate registration flow |
-| `apps/superadmin` | React 19, Vite | Staff backoffice and RBAC panel |
-| `apps/companyprofile` | Next.js 16 | Public profile site |
-| `apps/api` | FastAPI, MySQL, Redis | Core API for every frontend |
-| `apps/whatsapp` | Node, Express, BullMQ | WhatsApp gateway |
+Dua rute publik (`/kuitansi/:id` dan `/loa/:registrationNo`) harus bisa dibuka tanpa login karena dipindai lewat QR code. Ini membatasi desain auth: data yang perlu diverifikasi publik tidak boleh bergantung pada sesi pengguna.
 
-Each frontend talks to the same FastAPI service. That keeps registration state, staff decisions, and public content on one data model instead of syncing between apps.
+## Arsitektur
 
-## Registration flow
+pnpm workspace diorkestrasi Turborepo. Tiap app terisolasi, terhubung lewat API pusat dan network internal Docker.
 
-1. A candidate fills a seven-step form. There is no `jenjang` field.
-2. The health questionnaire has ten questions.
-3. Staff verify uploaded documents in the PPDB backoffice.
-4. The TIU exam runs in Safe Exam Browser. A Google Apps Script webhook posts the result back to the API.
-5. The candidate books Tahfidz and interview sessions.
-6. Payment uses QRIS through Pakasir v2, including a second installment stage.
-7. The system generates the LoA, SKD, receipts, and a ZIP dossier.
+| Aplikasi | Path | Stack | Peran |
+| --- | --- | --- | --- |
+| Portal PPDB | `apps/ppdb` | React 19, Vite | Pendaftaran santri dan backoffice panitia |
+| Superadmin | `apps/superadmin` | React 19, Vite | Manajemen staf, RBAC, audit |
+| Company Profile | `apps/companyprofile` | Next.js 16, Tailwind v4 | Website publik |
+| Core API | `apps/api` | FastAPI, MySQL, Redis | Backend REST monolitik |
+| WA Gateway | `apps/whatsapp` | Node, BullMQ, Express | Notifikasi WhatsApp realtime |
 
-## Authentication and staff tools
+```text
+                    +------------------+   +------------------+
+   browser   --->   |  companyprofile  |   |      ppdb        |
+                    |   (Next.js 16)   |   |   (React 19)     |
+                    +--------+---------+   +--------+---------+
+                             |                      |
+                             +----------+-----------+
+                                        |
+                              +---------v----------+        +------------------+
+                              |    core api        |<------>|    superadmin    |
+                              |    (FastAPI)       |        |   (React 19)     |
+                              +----+----+----+-----+        +------------------+
+                                   |    |    |
+                        +----------+    |    +-----------+
+                        |               |                |
+                   +----v----+    +-----v-----+   +------v------+
+                   |  MySQL  |    |   Redis   |   |  WA Gateway |
+                   +---------+    +-----------+   |  (BullMQ)   |
+                                                  +-------------+
+```
 
-The API issues JWT sessions in HTTP-only cookies. It tracks active device sessions and can revoke them. The superadmin panel runs on an RBAC matrix with an audit trail, broadcast notifications, WhatsApp bot monitoring, and semantic search.
+## Alur pendaftaran
 
-## Public verification
+1. Calon santri mengisi formulir tujuh tahap. Tidak ada field jenjang, jadi satu alur berlaku untuk semua pendaftar.
+2. Kuesioner kesehatan berisi sepuluh soal dan diverifikasi.
+3. Panitia memverifikasi dokumen yang diunggah di backoffice PPDB.
+4. Ujian TIU berjalan di Safe Exam Browser. Google Apps Script mengirim nilai kembali ke API lewat webhook.
+5. Peserta booking sesi 1:1 Tahfidz dan wawancara.
+6. Pembayaran pakai QRIS dinamis dari Pakasir API v2, termasuk skema cicilan tahap 2 yang dimonitor di `/admin/pembayaran-tahap2/:id`.
+7. Sistem menerbitkan LoA, SKD, kuitansi, dan dossier ZIP.
 
-Receipts at `/kuitansi/:id` and LoA at `/loa/:registrationNo` can be checked without an account. The receipt carries an HMAC token for verification, so a changed identifier does not pass.
+## Auth dan sesi
+
+Core API memakai HTTP-only Cookie JWT. API melacak sesi perangkat aktif dan bisa mencabutnya, sehingga login lama bisa diputus kalau perangkat hilang. Panel superadmin berjalan di atas matriks role dan permission per modul, dengan audit trail untuk perubahan penting, broadcast notifikasi, monitoring bot WhatsApp, dan pencarian semantik lewat `Ctrl+K`.
+
+## Verifikasi publik
+
+`/kuitansi/:id` menandatangani kuitansi dengan token HMAC, jadi ID yang diubah tidak lolos verifikasi. `/loa/:registrationNo` memverifikasi status kelulusan tanpa perlu login. Keduanya dirancang untuk dipindai dari dokumen fisik.
 
 ## Background work
 
-WhatsApp messages run through the separate Node service using `whatsapp-web.js` and Chromium, with BullMQ on Redis. The API enqueues a job; the worker sends the message. This keeps slow outbound calls off the request path.
+Pengiriman WhatsApp dipisah ke service Node sendiri memakai `whatsapp-web.js` dan Chromium. API memasukkan job ke BullMQ di atas Redis, worker yang mengirim. Ini menjauhkan panggilan keluar yang lambat dari request path, dan bot bisa dimonitor terpisah dari API.
 
-## Status
+## Deployment
 
-The admission cycle and staff tools are in place. An AI chatbot for the public site is planned and is not part of the current build.
+Docker Compose untuk lokal di WSL2 (`docs/DOCKER_SETUP.md`) dan VPS produksi dengan nginx plus Let's Encrypt (`docs/DOCKER_PRODUCTION.md`). Port lokal: company profile 3000, portal PPDB 5173, superadmin 5174, API 8080.
+
+## Yang belum ada
+
+Chatbot AI untuk website publik masih direncanakan dan belum masuk build saat ini.

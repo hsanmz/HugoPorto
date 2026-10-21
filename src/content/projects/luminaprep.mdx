@@ -1,28 +1,59 @@
-## What this is
+## Ringkas
 
-AI learning platform built as a monorepo. It was the final project of the Devscale AI-Enabled Python Web Dev program. The frontend, backend, and QA tooling live in one repository so a change to the API and the UI can ship together.
+Platform belajar berbasis AI, dibangun sebagai monorepo. Frontend, backend, dan perangkat QA ada dalam satu repo supaya perubahan API dan UI bisa rilis bersamaan. Ini proyek akhir program AI-Enabled Python Web Dev di Devscale.
 
-## How it is put together
+## Konteks dan batasan
 
-| Layer | Stack | Role |
+Fitur AI tidak bisa berjalan di request path biasa. Chunking dokumen, embedding, dan panggilan model makan waktu detik sampai puluhan detik, jadi pekerjaan itu harus keluar dari siklus request dan response. Kualitas jawaban juga sulit dinilai setelah rilis kalau tidak ada jejak, jadi observability dijadikan bagian dari build, bukan tambahan belakangan.
+
+## Arsitektur
+
+| Layer | Stack | Peran |
 | --- | --- | --- |
-| Frontend | React 19, TypeScript, Vite, TanStack Router, Ant Design, Tailwind CSS | Student-facing UI |
-| BFF | Express, PM2 | Proxies browser calls to the API |
-| API | FastAPI, Python 3.11, Uvicorn | Business logic and AI endpoints |
-| Data | MySQL 8.4, SQLModel, Alembic | Application data and migrations |
-| Queue | Redis 7, Celery | Background jobs |
-| AI | ChromaDB, OpenAI, Chonkie, Langfuse | Retrieval, generation, and tracing |
+| Frontend | React 19, TypeScript, Vite, TanStack Router, Ant Design, Tailwind CSS, Framer Motion | UI untuk siswa dan pengajar |
+| BFF | Express, PM2 | Proxy panggilan browser ke API |
+| API | FastAPI, Python 3.11, Uvicorn | Logika bisnis dan endpoint AI |
+| Data | MySQL 8.4, SQLModel, Alembic | Data aplikasi dan migrasi |
+| Queue | Redis 7, Celery | Job background |
+| AI | ChromaDB, OpenAI, Chonkie, Langfuse | Retrieval, generation, tracing |
+| Auth | JWT (python-jose), Google OAuth, bcrypt | Login dan sesi |
 
-The browser calls the Express BFF, which forwards to FastAPI. The API reads MySQL, hands slow work to Redis and Celery, and uses ChromaDB for vector storage.
+```text
+   browser
+      |
+      v
++-------------+     +--------------+     +-------------+
+|  frontend   | --> |  Express BFF | --> |  FastAPI    |
+|  (React 19) |     |   (PM2)      |     |  (Python)   |
++-------------+     +--------------+     +------+------+
+                                                |
+                    +-------------+-------------+-------------+
+                    |             |             |             |
+              +-----v----+  +-----v----+  +-----v----+  +-----v------+
+              |  MySQL   |  |  Redis   |  | ChromaDB |  |  Langfuse  |
+              |  8.4     |  |  +Celery |  | (vector) |  |  (traces)  |
+              +----------+  +----------+  +----------+  +------------+
+```
 
-## The AI path
+Browser memanggil BFF, BFF meneruskan ke FastAPI. API membaca MySQL, melempar pekerjaan lambat ke Redis dan Celery, dan memakai ChromaDB untuk penyimpanan vektor.
 
-Chonkie splits documents into chunks, ChromaDB stores the embeddings, and OpenAI is part of the generation stack. Langfuse records LLM traces and latency probes so the team can inspect an answer after deployment instead of guessing why it changed.
+## Jalur AI
+
+Chonkie memecah dokumen jadi chunk, ChromaDB menyimpan embedding, dan OpenAI ada di sisi generation. Langfuse merekam trace LLM dan latency probe, sehingga tim bisa menelusuri kenapa sebuah jawaban berubah setelah deployment tanpa menebak.
 
 ## Local stack
 
-`docker-compose` starts the frontend, API, Redis, Celery worker, MySQL, and phpMyAdmin together. One command brings up the full system, which keeps local work close to the deployed layout.
+`docker-compose up -d --build` menyalakan frontend, API, Redis, Celery worker, MySQL, dan phpMyAdmin dalam satu jaringan bridge (`luminaprep-net`) dengan volume MySQL di `./dbdata`.
 
-## QA
+| Layanan | Alamat |
+| --- | --- |
+| Frontend | `http://localhost:3000` |
+| API | `http://localhost:8000` |
+| API docs | `http://localhost:8000/docs` |
+| Scalar reference | `http://localhost:8000/scalar` |
+| phpMyAdmin | `http://localhost:8099` |
+| MySQL | `localhost:3363` (user `user_lp`, db `db_lp`) |
 
-The `qa` folder holds test plans, runbooks, latency probes, and Langfuse traces. Observability was part of the build, not an afterthought.
+## QA dan observability
+
+Folder `qa` menyimpan test plan, runbook, latency probe, dan trace Langfuse. Rencana uji dan jejak LLM disimpan di repo yang sama dengan kode, jadi hasil pengukuran bisa dirujuk saat meninjau perubahan.
