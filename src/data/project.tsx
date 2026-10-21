@@ -31,7 +31,7 @@ export const PROJECTS = [
 
   {
     title: 'Payroll PT PSF',
-    href: 'https://payroll-app-ptpsf.hugoedmoundo.fun/',
+    href: 'https://payroll-app-ptpsf.vercel.app/',
     dates: 'May 2026',
     active: true,
     openSource: false,
@@ -41,11 +41,11 @@ export const PROJECTS = [
     links: [
       {
         type: 'Website',
-    href: 'https://payroll-app-ptpsf.vercel.app/',
+        href: 'https://payroll-app-ptpsf.vercel.app/',
         icon: <GlobeIcon className="size-3" />,
       },
     ],
-    image: 'https://kikobzzqdpfbmwppfiem.supabase.co/storage/v1/object/public/media/projects/1780036933079-Screenshot%202026-05-29%20134157.png',
+    image: '',
     video: '',
   },
 
@@ -90,7 +90,7 @@ export const PROJECTS = [
         icon: <GithubIcon className="size-3" />,
       },
     ],
-    image: 'https://kikobzzqdpfbmwppfiem.supabase.co/storage/v1/object/public/media/projects/1775642153396-Screenshot%202026-04-08%20165534.png',
+    image: '',
     video: '',
   },
 
