@@ -53,6 +53,11 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      external: ['mermaid'],
+    },
+  },
   server: {
     allowedHosts: ['local.iyansr.id'],
     port: 2718,

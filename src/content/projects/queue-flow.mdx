@@ -8,34 +8,25 @@ Queues run per period, such as per day or per service session. Each period needs
 
 ## Architecture
 
-```text
-Staff Console      Public Display
-      |                  |
-      +--------+---------+
-                   |
-                   v
-          Supabase Client
-          (realtime+REST)
-                   |
-                   v
-        +------------------+
-        | Supabase Platform|
-        |                  |
-        |  Postgres        |
-        |  Periods | Queues|
-        |  Numbers | Status|
-        |  Config         |
-        |                  |
-        |  Realtime Subs   |
-        |  Queue changes   |
-        |  Status moves    |
-        |  New entries     |
-        |  Reordering      |
-        |                  |
-        |  Auth | RLS      |
-        |  Staff R/W       |
-        |  Display R       |
-        +------------------+
+```mermaid
+graph TD
+    SC[Staff Console<br/>React + Vite]
+    PD[Public Display<br/>React + Vite]
+
+    SC --> SBC[Supabase Client<br/>realtime + REST]
+    PD --> SBC
+
+    SBC --> SP[Supabase Platform]
+
+    subgraph Supabase Platform
+        DB[(Postgres Database<br/>Periods, Queues, Numbers, Status, Config)]
+        RS[Realtime Subscriptions<br/>Queue changes, Status moves, New entries, Reordering]
+        AUTH[Auth + Row Level Security<br/>Staff R/W, Display R]
+    end
+
+    SBC --> DB
+    SBC --> RS
+    SBC --> AUTH
 ```
 
 Two lightweight React frontends (staff console and public display) talk directly to Supabase. The database holds periods, queues, numbers, and status. Realtime subscriptions push every change to all open clients instantly. Auth and Row Level Security enforce who can write versus who can only view.

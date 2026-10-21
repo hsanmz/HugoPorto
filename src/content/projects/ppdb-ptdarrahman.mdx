@@ -10,26 +10,37 @@ Two public routes must open without a login because they are scanned from QR cod
 
 ## Architecture
 
-```text
-Frontends
-  Candidate Portal   (React 19)
-  Committee Backoffice (React 19)
-  Public Website     (Next.js)
-  Admin Panel        (React 19)
-       |
-       v
-Core API (FastAPI)
-  Registration | Verification | Examination
-  Scheduling   | Payments    | Documents
-  Auth/Session | RBAC/Audit  | Search
-  Public Verify
-       |
-       +------------------+------------------+
-       |                  |                  |
-       v                  v                  v
-  MySQL             Redis               WA Gateway
-  (source           (cache, queue,      (BullMQ,
-   of truth)         sessions)          notify)
+```mermaid
+graph TD
+    subgraph Frontends
+        A[Candidate Portal<br/>React 19]
+        B[Committee Backoffice<br/>React 19]
+        C[Public Website<br/>Next.js]
+        D[Admin Panel<br/>React 19]
+    end
+
+    API[Core API (FastAPI)]
+    A --> API
+    B --> API
+    C --> API
+    D --> API
+
+    subgraph Core
+        API --> REG[Registration]
+        API --> VER[Verification]
+        API --> EXM[Examination]
+        API --> SCH[Scheduling]
+        API --> PAY[Payments]
+        API --> DOC[Documents]
+        API --> AUTH[Auth & Sessions]
+        API --> RBAC[RBAC & Audit]
+        API --> SRCH[Search]
+        API --> PUB[Public Verify]
+    end
+
+    API --> DB[(MySQL<br/>source of truth)]
+    API --> REDIS[(Redis<br/>cache, queue, sessions)]
+    API --> WA[WA Gateway<br/>BullMQ notify]
 ```
 
 The architecture centers on one API that owns all domain logic. Frontends are thin consumers. Background work (WhatsApp, scheduling) is offloaded to Redis and a dedicated gateway so the API stays fast. Public verification runs through read-only endpoints that require no session.

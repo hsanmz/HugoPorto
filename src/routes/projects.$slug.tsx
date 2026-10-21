@@ -7,6 +7,7 @@ import {
 import { ChevronLeft, ExternalLink } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useEffect, useRef } from 'react';
 
 import { BlurFade } from '@/components/magicui/blur-fade';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,27 @@ export const Route = createFileRoute('/projects/$slug')({
 });
 
 const DELAY = 0.04;
+
+function MermaidCode({ children, className }: { children?: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLPreElement>(null);
+  const isMermaid = className?.includes('language-mermaid');
+
+  useEffect(() => {
+    if (isMermaid && ref.current && typeof window !== 'undefined') {
+      import('mermaid').then((m) => {
+        const mermaid = m.default ?? m;
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
+        mermaid.run({ nodes: [ref.current!] }).catch(() => {});
+      });
+    }
+  }, [isMermaid]);
+
+  return (
+    <pre ref={ref} className={className}>
+      <code className={className}>{children}</code>
+    </pre>
+  );
+}
 
 function RouteComponent() {
   const { project } = useLoaderData({ from: '/projects/$slug' });
@@ -112,7 +134,14 @@ function RouteComponent() {
 
         <BlurFade delay={DELAY * 3}>
           <article className="prose text-pretty dark:prose-invert">
-            <Markdown remarkPlugins={[remarkGfm]}>{project.content}</Markdown>
+            <Markdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                code: MermaidCode,
+              }}
+            >
+              {project.content}
+            </Markdown>
           </article>
         </BlurFade>
       </div>
