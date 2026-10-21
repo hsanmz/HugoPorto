@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { useState } from 'react';
 import Markdown from 'react-markdown';
 
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { getProjectPreviewSources } from '@/lib/project-preview';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -42,6 +44,10 @@ export function ProjectCard({
   links,
   className,
 }: Props) {
+  const previewSources = getProjectPreviewSources(href, image);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const previewSrc = previewSources[previewIndex];
+
   return (
     <Card
       className={
@@ -62,12 +68,15 @@ export function ProjectCard({
             className="pointer-events-none mx-auto h-40 w-full object-cover object-top" // needed because random black line at bottom of video
           />
         )}
-        {image && (
+        {previewSrc && (
           <img
-            src={image}
-            alt={title}
+            src={previewSrc}
+            alt={`${title} preview`}
             width={500}
             height={300}
+            loading="lazy"
+            decoding="async"
+            onError={() => setPreviewIndex((index) => index + 1)}
             className="h-40 w-full overflow-hidden object-cover object-top rounded-t-lg"
           />
         )}
