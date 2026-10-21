@@ -9,50 +9,33 @@ Queues run per period, such as per day or per service session. Each period needs
 ## Architecture
 
 ```text
-+--------------------------------------------------+
-|                      QUEUE FLOW                  |
-|                                                  |
-|  +--------------+         +--------------+       |
-|  |Staff Console |         |Public Display|       |
-|  |(React+Vite)  |         |(React+Vite)  |       |
-|  |              |         |              |       |
-|  | Open period  |         | Live queue   |       |
-|  | Add numbers  |         | Auto-refresh |       |
-|  | Call/Skip/   |         | Current #    |       |
-|  | Complete     |         | Wait time    |       |
-|  | Reorder      |         +------+-------+       |
-|  | Bulk actions |                |              |
-|  +------+-------+                |              |
-|         |                        |              |
-|         |  +------------------+   |              |
-|         |  |Supabase Client   |   |              |
-|         |  |(realtime + REST) |   |              |
-|         |  +--------+---------+   |              |
-|         +-----------|------------+              |
-|                     v                           |
-|        +--------------------------------+       |
-|        |      Supabase Platform         |       |
-|        |                                |       |
-|        | +----------+  +--------------+ |       |
-|        | | Postgres |  | Realtime     | |       |
-|        | | Database |  | Subscriptions| |       |
-|        | |          |  |              | |       |
-|        | | Periods  |  | Queue changes| |       |
-|        | | Queues   |  | Status moves | |       |
-|        | | Numbers  |  | New entries  | |       |
-|        | | Status   |  | Reordering   | |       |
-|        | | Config   |  +--------------+ |       |
-|        | +----------+                  |       |
-|        |                               |       |
-|        | +----------+  +--------------+ |       |
-|        | | Auth     |  | Row Level    | |       |
-|        | |          |  | Security     | |       |
-|        | | Email    |  |              | |       |
-|        | | Magic lnk|  | Staff R/W    | |       |
-|        | +----------+  | Display R    | |       |
-|        |               +--------------+ |       |
-|        +--------------------------------+       |
-+--------------------------------------------------+
+Staff Console      Public Display
+      |                  |
+      +--------+---------+
+                   |
+                   v
+          Supabase Client
+          (realtime+REST)
+                   |
+                   v
+        +------------------+
+        | Supabase Platform|
+        |                  |
+        |  Postgres        |
+        |  Periods | Queues|
+        |  Numbers | Status|
+        |  Config         |
+        |                  |
+        |  Realtime Subs   |
+        |  Queue changes   |
+        |  Status moves    |
+        |  New entries     |
+        |  Reordering      |
+        |                  |
+        |  Auth | RLS      |
+        |  Staff R/W       |
+        |  Display R       |
+        +------------------+
 ```
 
 Two lightweight React frontends (staff console and public display) talk directly to Supabase. The database holds periods, queues, numbers, and status. Realtime subscriptions push every change to all open clients instantly. Auth and Row Level Security enforce who can write versus who can only view.
@@ -63,7 +46,7 @@ Two lightweight React frontends (staff console and public display) talk directly
 
 **Number management.** Add, remove, and reorder numbers within the active period. Bulk actions for common operations.
 
-**Status lifecycle.** Each number moves through a clear status flow: waiting → called → serving → completed (or skipped / no-show).
+**Status lifecycle.** Each number moves through a clear status flow: waiting -> called -> serving -> completed (or skipped / no-show).
 
 **Staff console.** One screen to call the next number, skip, complete, reorder, and manage the queue in real time.
 

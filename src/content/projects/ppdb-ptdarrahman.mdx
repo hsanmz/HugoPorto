@@ -11,31 +11,25 @@ Two public routes must open without a login because they are scanned from QR cod
 ## Architecture
 
 ```text
-+--------------------------------------------------+
-|             UNIFIED DATA PLANE                   |
-|  +----------+ +----------+ +----------+ +------+ |
-|  |Candidate | |Committee | | Public   | |Admin | |
-|  | Portal   | |Backoffice| | Website  | |Panel | |
-|  |(React 19)| |(React 19)| |(Next.js) | |React | |
-|  +----+-----+ +----+-----+ +----+-----+ +--+---+ |
-|       |            |            |           |      |
-|       +------------+------------+-----------+      |
-|                        |                          |
-|              +-----------------------------+      |
-|              |     Core API (FastAPI)      |      |
-|              |  Reg.  Verif.  Exam  Sched. |      |
-|              |  Pay.  Docs   Auth   RBAC   |      |
-|              |  Search PubVerify           |      |
-|              +--------------+--------------+      |
-|                             |                     |
-|           +-----------------+-----------------+   |
-|           |                 |                 |   |
-|      +----------+     +------------+     +----------+  |
-|      |  MySQL   |     |   Redis    |     |WA Gateway|  |
-|      |(source of|     |(cache, Q,  |     | (BullMQ) |  |
-|      | truth)   |     | sessions)  |     | (notify) |  |
-|      +----------+     +------------+     +----------+  |
-+--------------------------------------------------+
+Frontends
+  Candidate Portal   (React 19)
+  Committee Backoffice (React 19)
+  Public Website     (Next.js)
+  Admin Panel        (React 19)
+       |
+       v
+Core API (FastAPI)
+  Registration | Verification | Examination
+  Scheduling   | Payments    | Documents
+  Auth/Session | RBAC/Audit  | Search
+  Public Verify
+       |
+       +------------------+------------------+
+       |                  |                  |
+       v                  v                  v
+  MySQL             Redis               WA Gateway
+  (source           (cache, queue,      (BullMQ,
+   of truth)         sessions)          notify)
 ```
 
 The architecture centers on one API that owns all domain logic. Frontends are thin consumers. Background work (WhatsApp, scheduling) is offloaded to Redis and a dedicated gateway so the API stays fast. Public verification runs through read-only endpoints that require no session.
