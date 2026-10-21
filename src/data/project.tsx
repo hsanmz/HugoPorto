@@ -2,6 +2,34 @@ import { GithubIcon, GlobeIcon } from 'lucide-react';
 
 export const PROJECTS = [
   {
+    title: 'PPDB Ar-Rahman',
+    href: 'https://github.com/hsanmz/project-ppdb',
+    dates: 'Aug 2026 — Present',
+    active: true,
+    openSource: true,
+    description:
+      "Integrated school admission (PPDB) and company profile platform for Pesantren Tahfidz Qur'an Ar-Rahman. A Turborepo monorepo covering a 7-step registration flow, document verification, TIU exams via Safe Exam Browser, 1:1 Tahfidz & interview booking, QRIS payments, digital LoA/SKD documents, an RBAC superadmin panel, a FastAPI core API with HTTP-only cookie JWT auth, and a WhatsApp notification gateway. An AI chatbot for the public site is planned.",
+    technologies: [
+      'React 19',
+      'Next.js 16',
+      'FastAPI',
+      'MySQL',
+      'Redis',
+      'Docker',
+      'Turborepo',
+    ],
+    links: [
+      {
+        type: 'Repository',
+        href: 'https://github.com/hsanmz/project-ppdb',
+        icon: <GithubIcon className="size-3" />,
+      },
+    ],
+    image: '',
+    video: '',
+  },
+
+  {
     title: 'Payroll PT PSF',
     href: 'https://payroll-app-ptpsf.hugoedmoundo.fun/',
     dates: 'May 2026',

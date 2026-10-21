@@ -17,7 +17,7 @@ export const EXPERIENCE: Experience[] = [
     description:
       'Built a web-based Corporate Payroll Management System using Laravel 11. Automated employee data management, tracked attendance, and processed monthly salary distributions efficiently.',
     location: 'Bekasi - Sentra Kota Jati Bening',
-    logo: 'https://asset.loker.id/img/2025/05/IMG-20250522-WA0025-150x150.jpg',
+    logo: '/images/logos/pangestu.jpg',
     technologies: ['PHP', 'JavaScript', 'Laravel', 'Tailwind', 'WebSocket', 'MySQL'],
     title: 'FullStack Developer',
   },
