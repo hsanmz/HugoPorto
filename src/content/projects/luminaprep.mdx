@@ -1,51 +1,72 @@
-## Ringkas
+## Summary
 
-Platform belajar berbasis AI, dibangun sebagai monorepo. Frontend, backend, dan perangkat QA ada dalam satu repo supaya perubahan API dan UI bisa rilis bersamaan. Ini proyek akhir program AI-Enabled Python Web Dev di Devscale.
+An AI learning platform built as a monorepo. The frontend, backend, and QA tooling live in one repository so API and UI changes ship together. It was the final project of the AI-Enabled Python Web Dev program at Devscale.
 
-## Konteks dan batasan
+## Context and constraints
 
-Fitur AI tidak bisa berjalan di request path biasa. Chunking dokumen, embedding, dan panggilan model makan waktu detik sampai puluhan detik, jadi pekerjaan itu harus keluar dari siklus request dan response. Kualitas jawaban juga sulit dinilai setelah rilis kalau tidak ada jejak, jadi observability dijadikan bagian dari build, bukan tambahan belakangan.
+AI features cannot run on a normal request path. Document chunking, embedding, and model calls take seconds, so that work has to leave the request and response cycle. Answer quality is also hard to judge after release without a trail, so observability was built in from the start rather than added later.
 
-## Arsitektur
-
-| Layer | Stack | Peran |
-| --- | --- | --- |
-| Frontend | React 19, TypeScript, Vite, TanStack Router, Ant Design, Tailwind CSS, Framer Motion | UI untuk siswa dan pengajar |
-| BFF | Express, PM2 | Proxy panggilan browser ke API |
-| API | FastAPI, Python 3.11, Uvicorn | Logika bisnis dan endpoint AI |
-| Data | MySQL 8.4, SQLModel, Alembic | Data aplikasi dan migrasi |
-| Queue | Redis 7, Celery | Job background |
-| AI | ChromaDB, OpenAI, Chonkie, Langfuse | Retrieval, generation, tracing |
-| Auth | JWT (python-jose), Google OAuth, bcrypt | Login dan sesi |
+## Architecture
 
 ```text
-   browser
-      |
-      v
-+-------------+     +--------------+     +-------------+
-|  frontend   | --> |  Express BFF | --> |  FastAPI    |
-|  (React 19) |     |   (PM2)      |     |  (Python)   |
-+-------------+     +--------------+     +------+------+
-                                                |
-                    +-------------+-------------+-------------+
-                    |             |             |             |
-              +-----v----+  +-----v----+  +-----v----+  +-----v------+
-              |  MySQL   |  |  Redis   |  | ChromaDB |  |  Langfuse  |
-              |  8.4     |  |  +Celery |  | (vector) |  |  (traces)  |
-              +----------+  +----------+  +----------+  +------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         LUMINAPREP PLATFORM                             │
+│                                                                         │
+│  ┌──────────────────┐     ┌──────────────────┐                         │
+│  │   Frontend       │     │   BFF Proxy      │                         │
+│  │   (React 19)     │────▶│   (Express)      │                         │
+│  │   • Learning UI  │     │   • Auth pass    │                         │
+│  │   • Dashboard    │     │   • Rate limit   │                         │
+│  │   • Chat/Study   │     │   • Logging      │                         │
+│  └──────────────────┘     └────────┬─────────┘                         │
+│                                     │                                  │
+│                                     ▼                                  │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │                    Core API (FastAPI)                           │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │  │
+│  │  │ Courses  │  │  Study   │  │  AI Chat │  │  Assessment  │   │  │
+│  │  │ & Lessons│  │  Sessions│  │  & RAG   │  │  & Progress  │   │  │
+│  │  └──────────┘  └──────────┘  └────┬─────┘  └──────────────┘   │  │
+│  └───────────────────────────────────┼────────────────────────────┘  │
+│                                       │                              │
+│         ┌─────────────────────────────┼─────────────────────────┐   │
+│         ▼                             ▼                           ▼   │
+│  ┌────────────┐              ┌──────────────┐            ┌──────────┐ │
+│  │  MySQL     │              │  Redis +     │            │ChromaDB  │ │
+│  │  (app data,│              │  Celery      │            │(vectors, │ │
+│  │  progress) │              │  (jobs,      │            │ embeddings)│ │
+│  └────────────┘              │  cache)      │            └──────────┘ │
+│                              └──────────────┘                     │
+└─────────────────────────────────────────────────────────────────────────┘
+                              ┌──────────────┐
+                              │  Langfuse    │
+                              │  (traces,    │
+                              │  latency,    │
+                              │  evals)      │
+                              └──────────────┘
 ```
 
-Browser memanggil BFF, BFF meneruskan ke FastAPI. API membaca MySQL, melempar pekerjaan lambat ke Redis dan Celery, dan memakai ChromaDB untuk penyimpanan vektor.
+The browser calls an Express BFF proxy, which forwards to the FastAPI core. The core API owns all domain logic: courses, study sessions, AI chat with retrieval, and assessment. Slow AI work (embedding, generation) is dispatched to Celery workers via Redis. Vector search runs against ChromaDB. Langfuse captures every LLM call, latency, and evaluation so the team can trace regressions after release.
 
-## Jalur AI
+## Features
 
-Chonkie memecah dokumen jadi chunk, ChromaDB menyimpan embedding, dan OpenAI ada di sisi generation. Langfuse merekam trace LLM dan latency probe, sehingga tim bisa menelusuri kenapa sebuah jawaban berubah setelah deployment tanpa menebak.
+**Adaptive learning paths.** Courses and lessons adapt based on student progress and assessment results.
+
+**Study sessions with AI assistance.** Students chat with an AI tutor that retrieves relevant context from the course material using RAG (Chonkie for chunking, ChromaDB for vectors, OpenAI for generation).
+
+**Assessment and progress tracking.** Quizzes and exercises update a student model that drives the next recommended content.
+
+**Course authoring.** Teachers create and structure lessons, upload materials, and define learning objectives.
+
+**Real-time progress dashboard.** Students and teachers see live progress, weak areas, and suggested next steps.
+
+**Observability by default.** Every AI interaction is traced in Langfuse with latency probes and automated evals, so quality regressions are visible immediately.
 
 ## Local stack
 
-`docker-compose up -d --build` menyalakan frontend, API, Redis, Celery worker, MySQL, dan phpMyAdmin dalam satu jaringan bridge (`luminaprep-net`) dengan volume MySQL di `./dbdata`.
+`docker-compose up -d --build` starts the frontend, API, Redis, Celery worker, MySQL, and phpMyAdmin on one bridge network with a persistent MySQL volume.
 
-| Layanan | Alamat |
+| Service | Address |
 | --- | --- |
 | Frontend | `http://localhost:3000` |
 | API | `http://localhost:8000` |
@@ -54,6 +75,6 @@ Chonkie memecah dokumen jadi chunk, ChromaDB menyimpan embedding, dan OpenAI ada
 | phpMyAdmin | `http://localhost:8099` |
 | MySQL | `localhost:3363` (user `user_lp`, db `db_lp`) |
 
-## QA dan observability
+## QA and observability
 
-Folder `qa` menyimpan test plan, runbook, latency probe, dan trace Langfuse. Rencana uji dan jejak LLM disimpan di repo yang sama dengan kode, jadi hasil pengukuran bisa dirujuk saat meninjau perubahan.
+The `qa` folder holds test plans, runbooks, latency probes, and Langfuse traces. Test plans and LLM traces live in the same repository as the code, so measurements can be cited when a change is reviewed.

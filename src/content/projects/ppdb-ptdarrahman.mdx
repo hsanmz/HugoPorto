@@ -1,72 +1,75 @@
-## Ringkas
+## Summary
 
-PPDB dan company profile untuk Pesantren Tahfidz Qur'an dan Digital Ar-Rahman. Satu repo menaungi website publik, portal pendaftaran santri, backoffice panitia, panel superadmin, dan WA gateway. Semua frontend membaca satu Core API, jadi status pendaftaran, keputusan panitia, dan konten publik berasal dari satu data model.
+Admission portal and company profile for Pesantren Tahfidz Qur'an dan Digital Ar-Rahman. One repository holds the public website, the student registration portal, the committee backoffice, the superadmin panel, and the WhatsApp gateway. Every frontend reads from a single Core API, so registration status, committee decisions, and published content come from one data model.
 
-## Konteks dan batasan
+## Context and constraints
 
-Seleksi santri punya beberapa tahap yang saling mengunci: kuesioner kesehatan, verifikasi dokumen, ujian TIU, wawancara, pembayaran, lalu penerbitan dokumen resmi. Kalau tiap tahap disimpan di aplikasi terpisah, status peserta akan tersebar dan rawan tidak sinkron. Karena itu bentuknya monorepo dengan satu API pusat, bukan kumpulan service yang saling memanggil.
+Student selection runs through stages that lock in sequence: health questionnaire, document verification, TIU exam, interview, payment, then official documents. If each stage lived in a separate application, candidate status would scatter across systems and drift out of sync. That constraint is why the project is a monorepo with one central API instead of a set of services calling each other.
 
-Dua rute publik (`/kuitansi/:id` dan `/loa/:registrationNo`) harus bisa dibuka tanpa login karena dipindai lewat QR code. Ini membatasi desain auth: data yang perlu diverifikasi publik tidak boleh bergantung pada sesi pengguna.
+Two public routes must open without a login because they are scanned from QR codes on printed documents. This shapes the auth design: anything verifiable by the public cannot depend on a user session.
 
-## Arsitektur
-
-pnpm workspace diorkestrasi Turborepo. Tiap app terisolasi, terhubung lewat API pusat dan network internal Docker.
-
-| Aplikasi | Path | Stack | Peran |
-| --- | --- | --- | --- |
-| Portal PPDB | `apps/ppdb` | React 19, Vite | Pendaftaran santri dan backoffice panitia |
-| Superadmin | `apps/superadmin` | React 19, Vite | Manajemen staf, RBAC, audit |
-| Company Profile | `apps/companyprofile` | Next.js 16, Tailwind v4 | Website publik |
-| Core API | `apps/api` | FastAPI, MySQL, Redis | Backend REST monolitik |
-| WA Gateway | `apps/whatsapp` | Node, BullMQ, Express | Notifikasi WhatsApp realtime |
+## Architecture
 
 ```text
-                    +------------------+   +------------------+
-   browser   --->   |  companyprofile  |   |      ppdb        |
-                    |   (Next.js 16)   |   |   (React 19)     |
-                    +--------+---------+   +--------+---------+
-                             |                      |
-                             +----------+-----------+
-                                        |
-                              +---------v----------+        +------------------+
-                              |    core api        |<------>|    superadmin    |
-                              |    (FastAPI)       |        |   (React 19)     |
-                              +----+----+----+-----+        +------------------+
-                                   |    |    |
-                        +----------+    |    +-----------+
-                        |               |                |
-                   +----v----+    +-----v-----+   +------v------+
-                   |  MySQL  |    |   Redis   |   |  WA Gateway |
-                   +---------+    +-----------+   |  (BullMQ)   |
-                                                  +-------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        UNIFIED DATA PLANE                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
+│  │  Candidate  │  │  Committee  │  │   Public    │  │  Platform   │   │
+│  │  Portal     │  │  Backoffice │  │  Website    │  │  Admin      │   │
+│  │  (React 19) │  │  (React 19) │  │  (Next.js)  │  │  (React 19) │   │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │
+│         │                │                │                │          │
+│         └────────────────┼────────────────┼────────────────┘          │
+│                          ▼                                             │
+│              ┌───────────────────────┐                                │
+│              │   Core API (FastAPI)  │                                │
+│              │  • Registration       │                                │
+│              │  • Verification       │                                │
+│              │  • Examination        │                                │
+│              │  • Scheduling         │                                │
+│              │  • Payments           │                                │
+│              │  • Document gen.      │                                │
+│              │  • Auth & Sessions    │                                │
+│              │  • RBAC & Audit       │                                │
+│              │  • Public verification│                                │
+│              │  • Search             │                                │
+│              └───────────┬───────────┘                                │
+│                         │                                              │
+│         ┌───────────────┼───────────────┐                              │
+│         ▼               ▼               ▼                              │
+│  ┌────────────┐  ┌───────────┐  ┌────────────┐                        │
+│  │   MySQL    │  │   Redis   │  │ WA Gateway │                        │
+│  │  (source)  │  │  (cache,  │  │  (BullMQ)  │                        │
+│  │  of truth) │  │  queue,   │  │  (notify)  │                        │
+│  └────────────┘  │  sessions)│  └────────────┘                        │
+│                  └───────────┘                                        │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Alur pendaftaran
+The architecture centers on one API that owns all domain logic. Frontends are thin consumers. Background work (WhatsApp, scheduling) is offloaded to Redis and a dedicated gateway so the API stays fast. Public verification runs through read-only endpoints that require no session.
 
-1. Calon santri mengisi formulir tujuh tahap. Tidak ada field jenjang, jadi satu alur berlaku untuk semua pendaftar.
-2. Kuesioner kesehatan berisi sepuluh soal dan diverifikasi.
-3. Panitia memverifikasi dokumen yang diunggah di backoffice PPDB.
-4. Ujian TIU berjalan di Safe Exam Browser. Google Apps Script mengirim nilai kembali ke API lewat webhook.
-5. Peserta booking sesi 1:1 Tahfidz dan wawancara.
-6. Pembayaran pakai QRIS dinamis dari Pakasir API v2, termasuk skema cicilan tahap 2 yang dimonitor di `/admin/pembayaran-tahap2/:id`.
-7. Sistem menerbitkan LoA, SKD, kuitansi, dan dossier ZIP.
+## Features
 
-## Auth dan sesi
+**Candidate registration.** A seven-step guided form with health questionnaire (ten questions), document upload, TIU exam in Safe Exam Browser, Tahfidz and interview booking, QRIS payment with optional installment, and digital signature for LoA and SKD.
 
-Core API memakai HTTP-only Cookie JWT. API melacak sesi perangkat aktif dan bisa mencabutnya, sehingga login lama bisa diputus kalau perangkat hilang. Panel superadmin berjalan di atas matriks role dan permission per modul, dengan audit trail untuk perubahan penting, broadcast notifikasi, monitoring bot WhatsApp, dan pencarian semantik lewat `Ctrl+K`.
+**Committee backoffice.** Wave management, document verification, rubric scoring, financial monitoring including second-installment tracking, and official document printing (forms, score sheets, receipts, LoA, SKD, ZIP dossier).
 
-## Verifikasi publik
+**Platform administration.** Staff accounts, role and permission matrix per module, audit trail for sensitive changes, broadcast notifications, WhatsApp bot health monitoring, semantic search across the platform, and active session tracking with revocation.
 
-`/kuitansi/:id` menandatangani kuitansi dengan token HMAC, jadi ID yang diubah tidak lolos verifikasi. `/loa/:registrationNo` memverifikasi status kelulusan tanpa perlu login. Keduanya dirancang untuk dipindai dari dokumen fisik.
+**Public website.** Program information, news, facilities, gallery, interactive 3D hero, staff profiles, and unified login portal.
 
-## Background work
+**Public verification.** Receipt and LoA pages that anyone can open by scanning a QR code. Receipts carry an HMAC seal so tampered identifiers are rejected.
 
-Pengiriman WhatsApp dipisah ke service Node sendiri memakai `whatsapp-web.js` dan Chromium. API memasukkan job ke BullMQ di atas Redis, worker yang mengirim. Ini menjauhkan panggilan keluar yang lambat dari request path, dan bot bisa dimonitor terpisah dari API.
+**Background notifications.** WhatsApp messages enqueued via BullMQ on Redis, sent by a separate Node service using `whatsapp-web.js` and Chromium. Keeps slow outbound calls off the API request path.
+
+## Auth and sessions
+
+HTTP-only Cookie JWT sessions with device tracking and revocation. The superadmin panel enforces an RBAC matrix, records an audit trail, and monitors active sessions.
 
 ## Deployment
 
-Docker Compose untuk lokal di WSL2 (`docs/DOCKER_SETUP.md`) dan VPS produksi dengan nginx plus Let's Encrypt (`docs/DOCKER_PRODUCTION.md`). Port lokal: company profile 3000, portal PPDB 5173, superadmin 5174, API 8080.
+Docker Compose for local (WSL2) and production (VPS with nginx and Let's Encrypt). Local ports: public site 3000, PPDB portal 5173, superadmin 5174, API 8080.
 
-## Yang belum ada
+## Not built yet
 
-Chatbot AI untuk website publik masih direncanakan dan belum masuk build saat ini.
+AI chatbot for the public website is planned and not part of the current build.

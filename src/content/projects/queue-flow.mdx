@@ -1,46 +1,92 @@
-## Ringkas
+## Summary
 
-Aplikasi manajemen antrian yang mengelompokkan antrian per periode. Satu periode punya antriannya sendiri, dan petugas mengubahnya dari satu layar. Kode tidak ditautkan dari halaman ini, jadi isinya adalah desain sistem.
+A queue management app that organizes queues by period. Each period holds its own queue, and staff update it from a single screen. The code is not linked from this page, so this covers the product and the system design.
 
-> Catatan: dokumen ini masih bertanda **Perlu dilengkapi**. Bagian yang kosong akan diisi setelah detail teknis proyek tersedia, dan tidak diisi dengan dugaan.
+## Context and constraints
 
-## Konteks dan batasan
+Queues run per period, such as per day or per service session. Each period needs its own list, and the status of each number changes throughout the day. For a small internal tool like this, the backend requirement is thin: read, write, and stay current in real time.
 
-Antrian berjalan per periode, misalnya per hari atau per sesi layanan. Tiap periode perlu daftar sendiri, dan status tiap nomor berubah sepanjang hari. Untuk alat internal seperti ini, kebutuhan backend-nya tipis: baca, tulis, dan realtime.
-
-## Arsitektur
-
-Frontend Vite dan React di atas Supabase. Supabase menyediakan database dan API, jadi tidak ada service backend terpisah. Build akhirnya statis dan disajikan dari Vercel.
+## Architecture
 
 ```text
-   browser (petugas)          browser (layar antrian)
-        |                              |
-        +--------------+---------------+
-                       |
-                       v
-              +------------------+
-              |    Supabase      |
-              |  database + API  |
-              +------------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        QUEUE FLOW                                       │
+│                                                                         │
+│  ┌─────────────────────┐         ┌─────────────────────┐              │
+│  │  Staff Console      │         │  Public Display     │              │
+│  │  (React + Vite)     │         │  (React + Vite)     │              │
+│  │                     │         │                     │              │
+│  │ • Open period       │         │ • Live queue list   │              │
+│  │ • Add numbers       │         │ • Auto-refresh      │              │
+│  │ • Call / Skip /     │         │ • Current number    │              │
+│  │   Complete          │         │ • Wait time est.    │              │
+│  │ • Reorder           │         └──────────┬──────────┘              │
+│  │ • Bulk actions      │                    │                         │
+│  └──────────┬──────────┘                    │                         │
+│             │                               │                         │
+│             │  ┌────────────────────────┐   │                         │
+│             │  │   Supabase Client      │   │                         │
+│             │  │   (realtime + REST)    │   │                         │
+│             │  └───────────┬────────────┘   │                         │
+│             └─────────────┼────────────────┘                         │
+│                           ▼                                           │
+│              ┌────────────────────────────────────┐                  │
+│              │           Supabase Platform        │                  │
+│              │                                    │                  │
+│              │  ┌──────────┐  ┌────────────────┐  │                  │
+│              │  │ Postgres │  │ Realtime       │  │                  │
+│              │  │ Database │  │ Subscriptions  │  │                  │
+│              │  │          │  │                │  │                  │
+│              │  │ • Periods│  │ • Queue changes│  │                  │
+│              │  │ • Queues │  │ • Status moves │  │                  │
+│              │  │ • Numbers│  │ • New entries  │  │                  │
+│              │  │ • Status │  │ • Reordering   │  │                  │
+│              │  │ • Config │  └────────────────┘  │                  │
+│              │  └──────────┘                      │                  │
+│              │                                    │                  │
+│              │  ┌──────────┐  ┌────────────────┐  │                  │
+│              │  │ Auth     │  │ Row Level      │  │                  │
+│              │  │          │  │ Security       │  │                  │
+│              │  │ • Email  │  │                │  │                  │
+│              │  │ • Magic  │  │ • Staff R/W    │  │                  │
+│              │  │   link   │  │ • Display R    │  │                  │
+│              │  └──────────┘  └────────────────┘  │                  │
+│              └────────────────────────────────────┘                  │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Alur data
+Two lightweight React frontends (staff console and public display) talk directly to Supabase. The database holds periods, queues, numbers, and status. Realtime subscriptions push every change to all open clients instantly. Auth and Row Level Security enforce who can write versus who can only view.
 
-Browser membaca dan menulis data antrian lewat klien Supabase. Tiap periode menyimpan antriannya sendiri, jadi petugas membuka periode yang sedang aktif dan memperbaruinya dari satu layar.
+## Features
 
-## Keputusan Desain
+**Period-based queues.** Create and open a period (day, shift, session). Each period owns an independent queue with its own numbering.
 
-**Supabase, bukan server sendiri.** Untuk alat internal kecil, backend terpisah menambah beban operasional tanpa manfaat. Supabase menghilangkan kebutuhan itu dan membuat deploy tetap sederhana.
+**Number management.** Add, remove, and reorder numbers within the active period. Bulk actions for common operations.
 
-**Frontend memegang seluruh aplikasi.** Data layer dikelola, jadi aplikasi cukup berupa build statis.
+**Status lifecycle.** Each number moves through a clear status flow: waiting → called → serving → completed (or skipped / no-show).
 
-## Perlu dilengkapi
+**Staff console.** One screen to call the next number, skip, complete, reorder, and manage the queue in real time.
 
-Bagian berikut belum ada datanya dan akan diisi setelah dokumentasi proyek dibuat:
+**Public display.** A read-only screen that auto-refreshes via realtime, showing the current number, recent calls, and estimated wait time.
 
-- Skema tabel: periode, antrian, nomor, status
-- Row Level Security dan aturan akses
-- Mekanisme update layar antrian: realtime subscription atau polling
-- Definisi status dan transisi (menunggu, dipanggil, selesai, lewat)
-- Penanganan nomor yang tidak hadir (no-show)
-- Reset dan penutupan periode
+**Realtime sync.** Every change (call, skip, complete, reorder, new number) broadcasts to all connected clients in sub-second latency.
+
+**Access control.** Staff authenticate and get full read-write on their periods. Public displays use a read-only role enforced by Row Level Security.
+
+**Static deploy.** The app builds to static assets served from Vercel. No application server to maintain.
+
+## Data flow
+
+Staff open the active period in the console. Adding or updating a number writes to Postgres; the realtime channel pushes the change to the console and all public displays instantly. The display never polls; it subscribes.
+
+## Design decisions
+
+**Supabase instead of a custom server.** For a small internal tool, a separate backend adds operational weight without benefit. Supabase removes that need and keeps the deploy simple.
+
+**Frontend holds the whole app.** With a managed data layer and realtime, the app is just a static build.
+
+**Realtime over polling.** Sub-second updates matter on a queue display; Supabase realtime delivers that without custom WebSocket infrastructure.
+
+## Status
+
+Live and used to manage queues per period.

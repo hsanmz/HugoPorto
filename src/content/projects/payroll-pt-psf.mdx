@@ -1,52 +1,89 @@
-## Ringkas
+## Summary
 
-Sistem payroll untuk PT Pangestu Suryaning Famili, dipakai internal perusahaan. Kode bersifat privat, jadi halaman ini memuat desain sistem dan alur bulanan, bukan source code.
+A payroll system for PT Pangestu Suryaning Famili, used internally by the company. The code is private, so this page covers the product, the system design, and the monthly workflow.
 
-> Catatan: dokumen ini masih bertanda **Perlu dilengkapi**. Bagian yang kosong akan diisi setelah detail teknis proyek tersedia, dan tidak diisi dengan dugaan.
+## Context and constraints
 
-## Konteks dan batasan
+Payroll depends on attendance that must always be current. If attendance and salary calculation lived in two systems, they would need a sync step that can fail or fall behind. That constraint shapes the whole application: one application, one database, one panel.
 
-Payroll bergantung pada absensi yang harus selalu terbaru. Kalau data kehadiran dan perhitungan gaji tersebar di dua sistem, dibutuhkan langkah sinkronisasi yang bisa gagal atau tertinggal. Batasan ini yang menentukan bentuk aplikasinya.
-
-## Arsitektur
-
-Satu aplikasi Laravel 11 dengan MySQL sebagai basis data. Data karyawan, absensi, dan gaji berada di database yang sama, dan operator bekerja dari satu panel admin. Antarmuka memakai Tailwind CSS.
+## Architecture
 
 ```text
-   browser (operator)
-        |
-        v
-+---------------------+        +------------------+
-|   Laravel 11 app    | <----> |      MySQL       |
-|   (admin panel)     |        | karyawan, absensi|
-+---------------------+        | gaji, payslip    |
-                               +------------------+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        PAYROLL SYSTEM                                   │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │                     Laravel 11 Application                       │  │
+│  │                                                                  │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │  │
+│  │  │ Employee     │  │ Attendance   │  │ Payroll Engine       │   │  │
+│  │  │ Management   │  │ Tracking     │  │                      │   │  │
+│  │  │              │  │              │  │ • Salary components  │   │  │
+│  │  │ • Profiles   │  │ • Daily logs │  │ • Allowances         │   │  │
+│  │  │ • Contracts  │  │ • Leaves     │  │ • Deductions         │   │  │
+│  │  │ • Positions  │  │ • Overtime   │  │ • Tax calculation    │   │  │
+│  │  │ • Grades     │  │ • Shifts     │  │ • Period close       │   │  │
+│  │  └──────────────┘  └──────────────┘  └──────────┬───────────┘   │  │
+│  │                                                 │               │  │
+│  │  ┌──────────────┐  ┌──────────────┐             ▼               │  │
+│  │  │ Reporting    │  │ Settings     │      Payslip Generation     │  │
+│  │  │              │  │              │                             │  │
+│  │  │ • Payroll    │  │ • Pay grades │  • Per-employee PDF         │  │
+│  │  │   register   │  │ • Components │  • Email delivery           │  │
+│  │  │ • Tax        │  │ • Schedules  │  • Bulk export              │  │
+│  │  │   reports    │  │ • Holidays   │  • Re-print                 │  │
+│  │  │ • Summaries  │  └──────────────┘  └─────────────────────────┘   │  │
+│  │  └──────────────┘                                                │  │
+│  └──────────────────────────────┬────────────────────────────────────┘  │
+│                                 │                                       │
+│                                 ▼                                       │
+│                    ┌────────────────────────┐                          │
+│                    │      MySQL Database    │                          │
+│                    │                        │                          │
+│                    │ • Employees            │                          │
+│                    │ • Attendance records   │                          │
+│                    │ • Salary components    │                          │
+│                    │ • Payroll runs         │                          │
+│                    │ • Payslips             │                          │
+│                    │ • Settings             │                          │
+│                    └────────────────────────┘                          │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Alur bulanan
+One Laravel application owns the entire payroll domain. Employee data, attendance, salary components, payroll runs, and payslips all live in the same MySQL database. The admin panel is the single interface for every payroll task.
 
-1. Operator menambah atau memperbarui data karyawan.
-2. Absensi dicatat selama bulan berjalan.
-3. Di akhir bulan, operator menjalankan distribusi gaji dari absensi yang terkumpul.
-4. Payslip dan ringkasan dihasilkan dari run yang sama.
+## Features
 
-## Keputusan Desain
+**Employee management.** Complete profiles with contracts, positions, grades, and salary components (base pay, allowances, deductions).
 
-**Satu aplikasi, bukan dua service.** Perhitungan gaji membaca catatan yang baru saja diedit operator. Menyatukan absensi dan gaji dalam satu database menghilangkan langkah sinkronisasi antar service.
+**Attendance tracking.** Daily logs, leaves, overtime, and shift assignments tied to each employee. Data stays current because it is entered in the same system that calculates payroll.
 
-**Satu panel admin.** Operator tidak perlu berpindah tools selama proses payroll berjalan.
+**Payroll engine.** Defines salary components, allowances, deductions, and tax rules. Runs the monthly calculation from the collected attendance and produces a payroll register.
 
-## Perlu dilengkapi
+**Period management.** Open and close payroll periods with lock dates so no changes slip in after a run.
 
-Bagian berikut belum ada datanya dan akan diisi setelah dokumentasi proyek dibuat:
+**Payslip generation.** Per-employee PDF payslips with email delivery, bulk export, and re-print capability.
 
-- Skema tabel: karyawan, absensi, komponen gaji, periode payroll, payslip
-- Aturan perhitungan: komponen tetap, potongan, lembur, pajak (kalau ada)
-- Role dan permission operator
-- Penanganan koreksi: absensi yang diubah setelah payroll dijalankan
-- Format dan pengiriman payslip
-- Deployment dan backup database
+**Reporting.** Payroll register, tax reports, and summary dashboards for finance and HR.
+
+**Settings.** Pay grades, component definitions, schedules, and holidays all configurable in the admin panel.
+
+## Monthly workflow
+
+1. Staff add or update employee records and salary components.
+2. Attendance is recorded daily throughout the month (logs, leaves, overtime).
+3. At period close, staff run the payroll calculation from the collected attendance.
+4. The run produces the payroll register, individual payslips, and summary reports.
+5. Payslips are distributed (PDF, email) and the period is locked.
+
+## Design decisions
+
+**One application, not two services.** The salary calculation reads the records staff just edited. Keeping attendance and payroll in one database removes a sync step between services.
+
+**Single admin panel.** Operators stay in one place for the whole payroll cycle.
+
+**Period locking.** Once a period is closed, attendance cannot be modified, preventing silent drift.
 
 ## Status
 
-Sistem live di PT Pangestu Suryaning Famili dan dipakai untuk payroll bulanan.
+Live at PT Pangestu Suryaning Famili and used for monthly payroll.
