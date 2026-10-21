@@ -2,7 +2,7 @@ import { GithubIcon, GlobeIcon } from 'lucide-react';
 
 export const PROJECTS = [
   {
-    title: 'PPDB Ar-Rahman',
+    title: 'PPDB PTDARRAHMAN',
     href: 'https://github.com/hsanmz/project-ppdb',
     dates: 'Aug 2026 — Present',
     active: true,
