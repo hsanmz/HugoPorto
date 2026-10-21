@@ -14,6 +14,7 @@ import { Route as OpenSourceRouteImport } from './routes/open-source'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo.tanstack-query'
+import { Route as ProjectsSlugRouteImport } from './routes/projects.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,12 +41,18 @@ const DemoTanstackQueryRoute = DemoTanstackQueryRouteImport.update({
   path: '/demo/tanstack-query',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsSlugRoute = ProjectsSlugRouteImport.update({
+  id: '/projects/$slug',
+  path: '/projects/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/open-source': typeof OpenSourceRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/projects/$slug': typeof ProjectsSlugRoute
   '/blog/': typeof BlogIndexRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/open-source': typeof OpenSourceRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/projects/$slug': typeof ProjectsSlugRoute
   '/blog': typeof BlogIndexRoute
 }
 export interface FileRoutesById {
@@ -61,20 +69,33 @@ export interface FileRoutesById {
   '/open-source': typeof OpenSourceRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
+  '/projects/$slug': typeof ProjectsSlugRoute
   '/blog/': typeof BlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/open-source' | '/blog/$slug' | '/demo/tanstack-query' | '/blog/'
+    | '/'
+    | '/open-source'
+    | '/blog/$slug'
+    | '/demo/tanstack-query'
+    | '/projects/$slug'
+    | '/blog/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/open-source' | '/blog/$slug' | '/demo/tanstack-query' | '/blog'
+  to:
+    | '/'
+    | '/open-source'
+    | '/blog/$slug'
+    | '/demo/tanstack-query'
+    | '/projects/$slug'
+    | '/blog'
   id:
     | '__root__'
     | '/'
     | '/open-source'
     | '/blog/$slug'
     | '/demo/tanstack-query'
+    | '/projects/$slug'
     | '/blog/'
   fileRoutesById: FileRoutesById
 }
@@ -83,6 +104,7 @@ export interface RootRouteChildren {
   OpenSourceRoute: typeof OpenSourceRoute
   BlogSlugRoute: typeof BlogSlugRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
+  ProjectsSlugRoute: typeof ProjectsSlugRoute
   BlogIndexRoute: typeof BlogIndexRoute
 }
 
@@ -123,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoTanstackQueryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$slug': {
+      id: '/projects/$slug'
+      path: '/projects/$slug'
+      fullPath: '/projects/$slug'
+      preLoaderRoute: typeof ProjectsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -131,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   OpenSourceRoute: OpenSourceRoute,
   BlogSlugRoute: BlogSlugRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
+  ProjectsSlugRoute: ProjectsSlugRoute,
   BlogIndexRoute: BlogIndexRoute,
 }
 export const routeTree = rootRouteImport

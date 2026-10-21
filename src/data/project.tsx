@@ -2,6 +2,7 @@ import { GlobeIcon } from 'lucide-react';
 
 export const PROJECTS = [
   {
+    slug: 'ppdb-ptdarrahman',
     title: 'PPDB PTDARRAHMAN',
     href: '',
     dates: 'Aug 2026 - Present',
@@ -24,6 +25,7 @@ export const PROJECTS = [
   },
 
   {
+    slug: 'payroll-pt-psf',
     title: 'Payroll PT PSF',
     href: 'https://payroll-app-ptpsf.vercel.app/',
     dates: 'May 2026',
@@ -44,6 +46,7 @@ export const PROJECTS = [
   },
 
   {
+    slug: 'luminaprep',
     title: 'LuminaPrep',
     href: '',
     dates: '2026',
@@ -66,6 +69,7 @@ export const PROJECTS = [
   },
 
   {
+    slug: 'queue-flow',
     title: 'Queue Flow',
     href: 'https://queue-flow-rouge.vercel.app/',
     dates: 'Apr 2026',

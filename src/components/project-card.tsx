@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import Markdown from 'react-markdown';
 
@@ -14,6 +15,7 @@ import { cn } from '@/lib/utils';
 
 interface Props {
   title: string;
+  slug: string;
   href?: string;
   openSource?: boolean;
   description: string;
@@ -32,6 +34,7 @@ interface Props {
 
 export function ProjectCard({
   title,
+  slug,
   href,
   description,
   dates,
@@ -46,7 +49,6 @@ export function ProjectCard({
   const previewSources = getProjectPreviewSources(href, image);
   const [previewIndex, setPreviewIndex] = useState(0);
   const previewSrc = previewSources[previewIndex];
-  const hasLink = Boolean(href);
 
   const media = (
     <>
@@ -88,23 +90,27 @@ export function ProjectCard({
         'flex flex-col overflow-hidden bg-background/30 backdrop-blur-xl border border-muted/75 gap-2 p-1 hover:shadow-lg transition-all duration-300 ease-out rounded-lg'
       }
     >
-      {hasLink && href ? (
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn('block cursor-pointer', className)}
-        >
-          {media}
-        </a>
-      ) : (
-        <div className={cn('block', className)}>{media}</div>
-      )}
+      <Link
+        to="/projects/$slug"
+        params={{ slug }}
+        className={cn('block cursor-pointer', className)}
+        aria-label={`Read the ${title} project notes`}
+      >
+        {media}
+      </Link>
       <CardHeader className="px-2">
         <div className="space-y-1">
           <div className="flex">
             <div className="flex-1">
-              <CardTitle className="text-base">{title}</CardTitle>
+              <CardTitle className="text-base">
+                <Link
+                  to="/projects/$slug"
+                  params={{ slug }}
+                  className="hover:underline"
+                >
+                  {title}
+                </Link>
+              </CardTitle>
             </div>
             <div>
               {openSource && (

@@ -1,0 +1,28 @@
+## What this is
+
+AI learning platform built as a monorepo. It was the final project of the Devscale AI-Enabled Python Web Dev program. The frontend, backend, and QA tooling live in one repository so a change to the API and the UI can ship together.
+
+## How it is put together
+
+| Layer | Stack | Role |
+| --- | --- | --- |
+| Frontend | React 19, TypeScript, Vite, TanStack Router, Ant Design, Tailwind CSS | Student-facing UI |
+| BFF | Express, PM2 | Proxies browser calls to the API |
+| API | FastAPI, Python 3.11, Uvicorn | Business logic and AI endpoints |
+| Data | MySQL 8.4, SQLModel, Alembic | Application data and migrations |
+| Queue | Redis 7, Celery | Background jobs |
+| AI | ChromaDB, OpenAI, Chonkie, Langfuse | Retrieval, generation, and tracing |
+
+The browser calls the Express BFF, which forwards to FastAPI. The API reads MySQL, hands slow work to Redis and Celery, and uses ChromaDB for vector storage.
+
+## The AI path
+
+Chonkie splits documents into chunks, ChromaDB stores the embeddings, and OpenAI is part of the generation stack. Langfuse records LLM traces and latency probes so the team can inspect an answer after deployment instead of guessing why it changed.
+
+## Local stack
+
+`docker-compose` starts the frontend, API, Redis, Celery worker, MySQL, and phpMyAdmin together. One command brings up the full system, which keeps local work close to the deployed layout.
+
+## QA
+
+The `qa` folder holds test plans, runbooks, latency probes, and Langfuse traces. Observability was part of the build, not an afterthought.

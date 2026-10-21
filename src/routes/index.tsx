@@ -151,6 +151,7 @@ function App() {
                           description={project.description}
                           tags={project.technologies}
                           title={project.title}
+                          slug={project.slug}
                           href={project.href}
                           links={project.links}
                           image={project.image}

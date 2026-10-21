@@ -1,0 +1,15 @@
+## What this is
+
+Queue management app for organizing queues by period. The code is not linked from this page, so these notes cover what the app does and how it is built.
+
+## How it is put together
+
+A Vite and React app on top of Supabase. Supabase provides the database and API, so the frontend runs without a separate backend service. The app is a static Vite build served from Vercel.
+
+## Data flow
+
+The browser reads and writes queue data through the Supabase client. Each period holds its own queue, so staff open the period they are working in and update it from one screen.
+
+## Why this shape
+
+Supabase removes the need for a separate server for a small internal tool. The frontend holds the whole app, and the data layer stays managed, which keeps the deploy simple.

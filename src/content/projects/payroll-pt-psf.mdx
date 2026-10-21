@@ -1,0 +1,22 @@
+## What this is
+
+Payroll system for PT Pangestu Suryaning Famili, a corporate payroll tool that runs inside the company. The code is private, so these notes cover the architecture and the monthly flow instead of the source.
+
+## How it is put together
+
+One Laravel 11 application backed by MySQL. Employee records, attendance, and salary data live in the same database, and staff work from a single admin panel built with Tailwind CSS. Keeping attendance and salary runs in one app avoids moving records between separate systems.
+
+## Monthly flow
+
+1. Staff add or update employee records.
+2. Attendance is recorded during the month.
+3. At the end of the month, staff run salary distribution from the collected attendance.
+4. Payslips and summaries are produced from the same run.
+
+## Why this shape
+
+Payroll depends on attendance being current. A single app means the calculation reads the same records the staff just edited, without a sync step between two services. The interface stays on the admin panel, so operators do not need to move between tools during a payroll run.
+
+## Status
+
+The system is live at PT Pangestu Suryaning Famili and used for monthly payroll.

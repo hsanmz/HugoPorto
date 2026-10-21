@@ -1,0 +1,43 @@
+## What this is
+
+Admission portal and company profile for Pesantren Tahfidz Qur'an dan Digital Ar-Rahman. The repository holds both the public-facing site and the staff tools that run the admission cycle, so registration data, verification status, and published information come from one place.
+
+## How it is put together
+
+The repo is a pnpm workspace managed by Turborepo. Several apps run behind one Docker network:
+
+| App | Stack | Role |
+| --- | --- | --- |
+| `apps/ppdb` | React 19, Vite | Candidate registration flow |
+| `apps/superadmin` | React 19, Vite | Staff backoffice and RBAC panel |
+| `apps/companyprofile` | Next.js 16 | Public profile site |
+| `apps/api` | FastAPI, MySQL, Redis | Core API for every frontend |
+| `apps/whatsapp` | Node, Express, BullMQ | WhatsApp gateway |
+
+Each frontend talks to the same FastAPI service. That keeps registration state, staff decisions, and public content on one data model instead of syncing between apps.
+
+## Registration flow
+
+1. A candidate fills a seven-step form. There is no `jenjang` field.
+2. The health questionnaire has ten questions.
+3. Staff verify uploaded documents in the PPDB backoffice.
+4. The TIU exam runs in Safe Exam Browser. A Google Apps Script webhook posts the result back to the API.
+5. The candidate books Tahfidz and interview sessions.
+6. Payment uses QRIS through Pakasir v2, including a second installment stage.
+7. The system generates the LoA, SKD, receipts, and a ZIP dossier.
+
+## Authentication and staff tools
+
+The API issues JWT sessions in HTTP-only cookies. It tracks active device sessions and can revoke them. The superadmin panel runs on an RBAC matrix with an audit trail, broadcast notifications, WhatsApp bot monitoring, and semantic search.
+
+## Public verification
+
+Receipts at `/kuitansi/:id` and LoA at `/loa/:registrationNo` can be checked without an account. The receipt carries an HMAC token for verification, so a changed identifier does not pass.
+
+## Background work
+
+WhatsApp messages run through the separate Node service using `whatsapp-web.js` and Chromium, with BullMQ on Redis. The API enqueues a job; the worker sends the message. This keeps slow outbound calls off the request path.
+
+## Status
+
+The admission cycle and staff tools are in place. An AI chatbot for the public site is planned and is not part of the current build.
