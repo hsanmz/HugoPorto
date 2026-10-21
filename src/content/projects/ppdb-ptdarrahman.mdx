@@ -11,39 +11,31 @@ Two public routes must open without a login because they are scanned from QR cod
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        UNIFIED DATA PLANE                               │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐   │
-│  │  Candidate  │  │  Committee  │  │   Public    │  │  Platform   │   │
-│  │  Portal     │  │  Backoffice │  │  Website    │  │  Admin      │   │
-│  │  (React 19) │  │  (React 19) │  │  (Next.js)  │  │  (React 19) │   │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘   │
-│         │                │                │                │          │
-│         └────────────────┼────────────────┼────────────────┘          │
-│                          ▼                                             │
-│              ┌───────────────────────┐                                │
-│              │   Core API (FastAPI)  │                                │
-│              │  • Registration       │                                │
-│              │  • Verification       │                                │
-│              │  • Examination        │                                │
-│              │  • Scheduling         │                                │
-│              │  • Payments           │                                │
-│              │  • Document gen.      │                                │
-│              │  • Auth & Sessions    │                                │
-│              │  • RBAC & Audit       │                                │
-│              │  • Public verification│                                │
-│              │  • Search             │                                │
-│              └───────────┬───────────┘                                │
-│                         │                                              │
-│         ┌───────────────┼───────────────┐                              │
-│         ▼               ▼               ▼                              │
-│  ┌────────────┐  ┌───────────┐  ┌────────────┐                        │
-│  │   MySQL    │  │   Redis   │  │ WA Gateway │                        │
-│  │  (source)  │  │  (cache,  │  │  (BullMQ)  │                        │
-│  │  of truth) │  │  queue,   │  │  (notify)  │                        │
-│  └────────────┘  │  sessions)│  └────────────┘                        │
-│                  └───────────┘                                        │
-└─────────────────────────────────────────────────────────────────────────┘
++--------------------------------------------------+
+|             UNIFIED DATA PLANE                   |
+|  +----------+ +----------+ +----------+ +------+ |
+|  |Candidate | |Committee | | Public   | |Admin | |
+|  | Portal   | |Backoffice| | Website  | |Panel | |
+|  |(React 19)| |(React 19)| |(Next.js) | |React | |
+|  +----+-----+ +----+-----+ +----+-----+ +--+---+ |
+|       |            |            |           |      |
+|       +------------+------------+-----------+      |
+|                        |                          |
+|              +-----------------------------+      |
+|              |     Core API (FastAPI)      |      |
+|              |  Reg.  Verif.  Exam  Sched. |      |
+|              |  Pay.  Docs   Auth   RBAC   |      |
+|              |  Search PubVerify           |      |
+|              +--------------+--------------+      |
+|                             |                     |
+|           +-----------------+-----------------+   |
+|           |                 |                 |   |
+|      +----------+     +------------+     +----------+  |
+|      |  MySQL   |     |   Redis    |     |WA Gateway|  |
+|      |(source of|     |(cache, Q,  |     | (BullMQ) |  |
+|      | truth)   |     | sessions)  |     | (notify) |  |
+|      +----------+     +------------+     +----------+  |
++--------------------------------------------------+
 ```
 
 The architecture centers on one API that owns all domain logic. Frontends are thin consumers. Background work (WhatsApp, scheduling) is offloaded to Redis and a dedicated gateway so the API stays fast. Public verification runs through read-only endpoints that require no session.

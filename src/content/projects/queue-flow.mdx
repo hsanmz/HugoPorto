@@ -9,50 +9,50 @@ Queues run per period, such as per day or per service session. Each period needs
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        QUEUE FLOW                                       │
-│                                                                         │
-│  ┌─────────────────────┐         ┌─────────────────────┐              │
-│  │  Staff Console      │         │  Public Display     │              │
-│  │  (React + Vite)     │         │  (React + Vite)     │              │
-│  │                     │         │                     │              │
-│  │ • Open period       │         │ • Live queue list   │              │
-│  │ • Add numbers       │         │ • Auto-refresh      │              │
-│  │ • Call / Skip /     │         │ • Current number    │              │
-│  │   Complete          │         │ • Wait time est.    │              │
-│  │ • Reorder           │         └──────────┬──────────┘              │
-│  │ • Bulk actions      │                    │                         │
-│  └──────────┬──────────┘                    │                         │
-│             │                               │                         │
-│             │  ┌────────────────────────┐   │                         │
-│             │  │   Supabase Client      │   │                         │
-│             │  │   (realtime + REST)    │   │                         │
-│             │  └───────────┬────────────┘   │                         │
-│             └─────────────┼────────────────┘                         │
-│                           ▼                                           │
-│              ┌────────────────────────────────────┐                  │
-│              │           Supabase Platform        │                  │
-│              │                                    │                  │
-│              │  ┌──────────┐  ┌────────────────┐  │                  │
-│              │  │ Postgres │  │ Realtime       │  │                  │
-│              │  │ Database │  │ Subscriptions  │  │                  │
-│              │  │          │  │                │  │                  │
-│              │  │ • Periods│  │ • Queue changes│  │                  │
-│              │  │ • Queues │  │ • Status moves │  │                  │
-│              │  │ • Numbers│  │ • New entries  │  │                  │
-│              │  │ • Status │  │ • Reordering   │  │                  │
-│              │  │ • Config │  └────────────────┘  │                  │
-│              │  └──────────┘                      │                  │
-│              │                                    │                  │
-│              │  ┌──────────┐  ┌────────────────┐  │                  │
-│              │  │ Auth     │  │ Row Level      │  │                  │
-│              │  │          │  │ Security       │  │                  │
-│              │  │ • Email  │  │                │  │                  │
-│              │  │ • Magic  │  │ • Staff R/W    │  │                  │
-│              │  │   link   │  │ • Display R    │  │                  │
-│              │  └──────────┘  └────────────────┘  │                  │
-│              └────────────────────────────────────┘                  │
-└─────────────────────────────────────────────────────────────────────────┘
++--------------------------------------------------+
+|                      QUEUE FLOW                  |
+|                                                  |
+|  +--------------+         +--------------+       |
+|  |Staff Console |         |Public Display|       |
+|  |(React+Vite)  |         |(React+Vite)  |       |
+|  |              |         |              |       |
+|  | Open period  |         | Live queue   |       |
+|  | Add numbers  |         | Auto-refresh |       |
+|  | Call/Skip/   |         | Current #    |       |
+|  | Complete     |         | Wait time    |       |
+|  | Reorder      |         +------+-------+       |
+|  | Bulk actions |                |              |
+|  +------+-------+                |              |
+|         |                        |              |
+|         |  +------------------+   |              |
+|         |  |Supabase Client   |   |              |
+|         |  |(realtime + REST) |   |              |
+|         |  +--------+---------+   |              |
+|         +-----------|------------+              |
+|                     v                           |
+|        +--------------------------------+       |
+|        |      Supabase Platform         |       |
+|        |                                |       |
+|        | +----------+  +--------------+ |       |
+|        | | Postgres |  | Realtime     | |       |
+|        | | Database |  | Subscriptions| |       |
+|        | |          |  |              | |       |
+|        | | Periods  |  | Queue changes| |       |
+|        | | Queues   |  | Status moves | |       |
+|        | | Numbers  |  | New entries  | |       |
+|        | | Status   |  | Reordering   | |       |
+|        | | Config   |  +--------------+ |       |
+|        | +----------+                  |       |
+|        |                               |       |
+|        | +----------+  +--------------+ |       |
+|        | | Auth     |  | Row Level    | |       |
+|        | |          |  | Security     | |       |
+|        | | Email    |  |              | |       |
+|        | | Magic lnk|  | Staff R/W    | |       |
+|        | +----------+  | Display R    | |       |
+|        |               +--------------+ |       |
+|        +--------------------------------+       |
++--------------------------------------------------+
 ```
 
 Two lightweight React frontends (staff console and public display) talk directly to Supabase. The database holds periods, queues, numbers, and status. Realtime subscriptions push every change to all open clients instantly. Auth and Row Level Security enforce who can write versus who can only view.

@@ -9,41 +9,38 @@ AI features cannot run on a normal request path. Document chunking, embedding, a
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         LUMINAPREP PLATFORM                             │
-│                                                                         │
-│  ┌──────────────────┐     ┌──────────────────┐                         │
-│  │   Frontend       │     │   BFF Proxy      │                         │
-│  │   (React 19)     │────▶│   (Express)      │                         │
-│  │   • Learning UI  │     │   • Auth pass    │                         │
-│  │   • Dashboard    │     │   • Rate limit   │                         │
-│  │   • Chat/Study   │     │   • Logging      │                         │
-│  └──────────────────┘     └────────┬─────────┘                         │
-│                                     │                                  │
-│                                     ▼                                  │
-│  ┌─────────────────────────────────────────────────────────────────┐  │
-│  │                    Core API (FastAPI)                           │  │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────┐   │  │
-│  │  │ Courses  │  │  Study   │  │  AI Chat │  │  Assessment  │   │  │
-│  │  │ & Lessons│  │  Sessions│  │  & RAG   │  │  & Progress  │   │  │
-│  │  └──────────┘  └──────────┘  └────┬─────┘  └──────────────┘   │  │
-│  └───────────────────────────────────┼────────────────────────────┘  │
-│                                       │                              │
-│         ┌─────────────────────────────┼─────────────────────────┐   │
-│         ▼                             ▼                           ▼   │
-│  ┌────────────┐              ┌──────────────┐            ┌──────────┐ │
-│  │  MySQL     │              │  Redis +     │            │ChromaDB  │ │
-│  │  (app data,│              │  Celery      │            │(vectors, │ │
-│  │  progress) │              │  (jobs,      │            │ embeddings)│ │
-│  └────────────┘              │  cache)      │            └──────────┘ │
-│                              └──────────────┘                     │
-└─────────────────────────────────────────────────────────────────────────┘
-                              ┌──────────────┐
-                              │  Langfuse    │
-                              │  (traces,    │
-                              │  latency,    │
-                              │  evals)      │
-                              └──────────────┘
++--------------------------------------------------+
+|              LUMINAPREP PLATFORM                 |
+|                                                  |
+|  +------------+       +------------+             |
+|  |  Frontend  |  -->  | BFF Proxy  |             |
+|  | (React 19) |       | (Express)  |             |
+|  |  Learning  |       | Auth pass  |             |
+|  |  Dashboard |       | Rate limit |             |
+|  |  Chat/Study|       | Logging    |             |
+|  +------------+       +-----+------+             |
+|                        |                         |
+|                        v                         |
+|  +------------------------------------------+   |
+|  |         Core API (FastAPI)               |   |
+|  |  Courses   Study   AI Chat   Assessment  |   |
+|  |  & Lessons Sessions  & RAG   & Progress  |   |
+|  +------------------+-----------------------+   |
+|                     |                           |
+|       +-------------+-------------+             |
+|       v             v             v             |
+|  +--------+    +------------+    +----------+   |
+|  | MySQL  |    | Redis+Celery|    |ChromaDB  |   |
+|  |(app,   |    | (jobs,cache)|    |(vectors, |   |
+|  | progress)    |             |    | embed.)  |   |
+|  +--------+    +------------+    +----------+   |
++--------------------------------------------------+
+                          +----------+
+                          | Langfuse |
+                          |(traces,  |
+                          | latency, |
+                          | evals)   |
+                          +----------+
 ```
 
 The browser calls an Express BFF proxy, which forwards to the FastAPI core. The core API owns all domain logic: courses, study sessions, AI chat with retrieval, and assessment. Slow AI work (embedding, generation) is dispatched to Celery workers via Redis. Vector search runs against ChromaDB. Langfuse captures every LLM call, latency, and evaluation so the team can trace regressions after release.

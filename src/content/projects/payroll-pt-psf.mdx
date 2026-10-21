@@ -9,45 +9,55 @@ Payroll depends on attendance that must always be current. If attendance and sal
 ## Architecture
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        PAYROLL SYSTEM                                   │
-│                                                                         │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │                     Laravel 11 Application                       │  │
-│  │                                                                  │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐   │  │
-│  │  │ Employee     │  │ Attendance   │  │ Payroll Engine       │   │  │
-│  │  │ Management   │  │ Tracking     │  │                      │   │  │
-│  │  │              │  │              │  │ • Salary components  │   │  │
-│  │  │ • Profiles   │  │ • Daily logs │  │ • Allowances         │   │  │
-│  │  │ • Contracts  │  │ • Leaves     │  │ • Deductions         │   │  │
-│  │  │ • Positions  │  │ • Overtime   │  │ • Tax calculation    │   │  │
-│  │  │ • Grades     │  │ • Shifts     │  │ • Period close       │   │  │
-│  │  └──────────────┘  └──────────────┘  └──────────┬───────────┘   │  │
-│  │                                                 │               │  │
-│  │  ┌──────────────┐  ┌──────────────┐             ▼               │  │
-│  │  │ Reporting    │  │ Settings     │      Payslip Generation     │  │
-│  │  │              │  │              │                             │  │
-│  │  │ • Payroll    │  │ • Pay grades │  • Per-employee PDF         │  │
-│  │  │   register   │  │ • Components │  • Email delivery           │  │
-│  │  │ • Tax        │  │ • Schedules  │  • Bulk export              │  │
-│  │  │   reports    │  │ • Holidays   │  • Re-print                 │  │
-│  │  │ • Summaries  │  └──────────────┘  └─────────────────────────┘   │  │
-│  │  └──────────────┘                                                │  │
-│  └──────────────────────────────┬────────────────────────────────────┘  │
-│                                 │                                       │
-│                                 ▼                                       │
-│                    ┌────────────────────────┐                          │
-│                    │      MySQL Database    │                          │
-│                    │                        │                          │
-│                    │ • Employees            │                          │
-│                    │ • Attendance records   │                          │
-│                    │ • Salary components    │                          │
-│                    │ • Payroll runs         │                          │
-│                    │ • Payslips             │                          │
-│                    │ • Settings             │                          │
-│                    └────────────────────────┘                          │
-└─────────────────────────────────────────────────────────────────────────┘
++--------------------------------------------------+
+|                    PAYROLL SYSTEM                |
+|                                                  |
+|  +--------------------------------------------+  |
+|  |           Laravel 11 Application           |  |
+|  |                                            |  |
+|  |  +------------+  +------------+            |  |
+|  |  | Employee   |  | Attendance |            |  |
+|  |  | Management |  | Tracking   |            |  |
+|  |  | Profiles   |  | Daily logs |            |  |
+|  |  | Contracts  |  | Leaves     |            |  |
+|  |  | Positions  |  | Overtime   |            |  |
+|  |  | Grades     |  | Shifts     |            |  |
+|  |  +------------+  +------------+            |  |
+|  |                                            |  |
+|  |  +------------+  +------------+            |  |
+|  |  | Payroll    |  | Reporting  |            |  |
+|  |  | Engine     |  |            |            |  |
+|  |  | Components |  | Register   |            |  |
+|  |  | Allowances |  | Tax reports|            |  |
+|  |  | Deductions |  | Summaries  |            |  |
+|  |  | Tax calc.  |  +------------+            |  |
+|  |  | Period close            +------------+  |  |
+|  |  |                          | Settings  |  |  |
+|  |  +--------------------------+ | Pay grades|  |  |
+|  |                             | Components|  |  |
+|  |                             | Schedules |  |  |
+|  |                             | Holidays  |  |  |
+|  |                             +------------+  |  |
+|  |                                            |  |
+|  |  +----------------------------------+      |  |
+|  |  | Payslip Generation               |      |  |
+|  |  | Per-employee PDF  Email delivery |      |  |
+|  |  | Bulk export      Re-print        |      |  |
+|  |  +----------------------------------+      |  |
+|  +----------------------+-------------------+  |
+|                         |                      |
+|                         v                      |
+|              +----------------------+         |
+|              |      MySQL Database  |         |
+|              |                      |         |
+|              |  Employees           |         |
+|              |  Attendance records  |         |
+|              |  Salary components   |         |
+|              |  Payroll runs        |         |
+|              |  Payslips            |         |
+|              |  Settings            |         |
+|              +----------------------+         |
++--------------------------------------------------+
 ```
 
 One Laravel application owns the entire payroll domain. Employee data, attendance, salary components, payroll runs, and payslips all live in the same MySQL database. The admin panel is the single interface for every payroll task.
