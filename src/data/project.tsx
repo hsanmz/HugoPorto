@@ -44,6 +44,11 @@ export const PROJECTS = [
         href: 'https://payroll-app-ptpsf.vercel.app/',
         icon: <GlobeIcon className="size-3" />,
       },
+      {
+        type: 'Repository',
+        href: 'https://github.com/hsanmz/payroll-app.ptpsf',
+        icon: <GithubIcon className="size-3" />,
+      },
     ],
     image: '',
     video: '',

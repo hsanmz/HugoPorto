@@ -138,20 +138,30 @@ function App() {
           </BlurFade>
 
           <BlurFade delay={BLUR_FADE_DELAY * 7 + EXPERIENCE.length * 0.05}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {PROJECTS.map((project) => (
-                <ProjectCard
-                  key={project.title}
-                  dates={project.dates}
-                  description={project.description}
-                  tags={project.technologies}
-                  title={project.title}
-                  href={project.href}
-                  links={project.links}
-                  image={project.image}
-                  video={project.video}
-                  openSource={project.openSource}
-                />
+            <div className="flex flex-col gap-4 md:flex-row md:items-start">
+              {[0, 1].map((column) => (
+                <div
+                  className="contents md:flex md:flex-1 md:flex-col md:gap-4"
+                  key={column}
+                >
+                  {PROJECTS.map((project, index) =>
+                    index % 2 === column ? (
+                      <div key={project.title} style={{ order: index }}>
+                        <ProjectCard
+                          dates={project.dates}
+                          description={project.description}
+                          tags={project.technologies}
+                          title={project.title}
+                          href={project.href}
+                          links={project.links}
+                          image={project.image}
+                          video={project.video}
+                          openSource={project.openSource}
+                        />
+                      </div>
+                    ) : null
+                  )}
+                </div>
               ))}
             </div>
           </BlurFade>

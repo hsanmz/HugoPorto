@@ -51,7 +51,7 @@ export function ProjectCard({
   return (
     <Card
       className={
-        'flex flex-col overflow-hidden bg-background/30 backdrop-blur-xl border border-muted/75 gap-2 p-1 hover:shadow-lg transition-all duration-300 ease-out h-full rounded-lg'
+        'flex flex-col overflow-hidden bg-background/30 backdrop-blur-xl border border-muted/75 gap-2 p-1 hover:shadow-lg transition-all duration-300 ease-out rounded-lg'
       }
     >
       <Link
@@ -105,7 +105,7 @@ export function ProjectCard({
           </div>
         </div>
       </CardHeader>
-      <CardContent className="mt-auto flex flex-col px-2">
+      <CardContent className="flex flex-col px-2">
         {tags && tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
             {tags?.map((tag) => (
