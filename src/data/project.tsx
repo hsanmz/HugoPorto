@@ -2,6 +2,35 @@ import { GlobeIcon } from 'lucide-react';
 
 export const PROJECTS = [
   {
+    slug: 'webwatch',
+    title: 'WebWatch',
+    href: 'https://webwatch.hugoedm.fun/',
+    dates: 'Aug 2026 - Present',
+    active: true,
+    openSource: true,
+    description:
+      'Self-hosted uptime monitor and error tracker built on Cloudflare Workers and D1. A separate cron worker probes each site on its own interval, records response times, and opens an incident after a configurable number of consecutive failures. A browser SDK posts frontend errors with stack traces to a Bearer-authenticated endpoint. Alerts, uptime history, and the login flow all run through Telegram, so the system stores no passwords.',
+    technologies: [
+      'TanStack Start',
+      'React 19',
+      'TypeScript',
+      'Cloudflare Workers',
+      'Cloudflare D1',
+      'Tailwind CSS v4',
+      'Telegram Bot API',
+    ],
+    links: [
+      {
+        type: 'Website',
+        href: 'https://webwatch.hugoedm.fun/',
+        icon: <GlobeIcon className="size-3" />,
+      },
+    ],
+    image: '',
+    video: '',
+  },
+
+  {
     slug: 'ppdb-ptdarrahman',
     title: 'PPDB PTDARRAHMAN',
     href: '',
