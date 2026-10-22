@@ -59,38 +59,27 @@ interface MermaidAPI {
   run: (options: { nodes: HTMLElement[] }) => Promise<void>;
 }
 
-// React-Markdown calls `pre` for fenced blocks and passes the <code> element
-// as children. We intercept `pre` so we can handle mermaid diagrams while
-// letting the default <code> child render normally for everything else.
-function CodeBlock({
-  children,
+// react-markdown v10 puts className="language-xxx" on the <code> element,
+// not on <pre>. We intercept `code` to catch mermaid blocks and render a
+// placeholder div that the useEffect will hydrate into an SVG diagram.
+// For every other language we fall back to a plain <code> tag.
+function MermaidOrCode({
   className,
-  style,
-}: React.ComponentPropsWithoutRef<'pre'> & { children?: React.ReactNode }) {
-  // Check if the direct child code element has a mermaid language class
-  const childEl =
-    children as React.ReactElement<
-      React.ComponentPropsWithoutRef<'code'>
-    > | null;
-  const codeClassName = childEl?.props?.className ?? className ?? '';
-
-  if (String(codeClassName).includes('language-mermaid')) {
-    const codeContent = String(childEl?.props?.children ?? '');
+  children,
+  ...rest
+}: React.ComponentPropsWithoutRef<'code'>) {
+  if (className?.includes('language-mermaid')) {
     return (
       <div
         className="my-4 rounded-lg border border-muted/50 bg-muted/10 p-4"
-        data-mermaid-code={codeContent}
-        style={style as React.CSSProperties}
+        data-mermaid-code={String(children).replace(/\n$/, '')}
       />
     );
   }
-
-  // For all other languages, render the pre tag and let children (the <code>
-  // element produced by react-markdown) render untouched.
   return (
-    <pre className={className} style={style as React.CSSProperties}>
+    <code className={className} {...rest}>
       {children}
-    </pre>
+    </code>
   );
 }
 
@@ -117,10 +106,12 @@ function RouteComponent() {
 
     (async () => {
       try {
-        const { default: mermaid } = (await import(
-          /* @vite-ignore */
-          'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs'
-        )) as { default: MermaidAPI };
+        const mermaidUrl =
+          'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        // Dynamic import from CDN — Vite ignores the URL, TS sees a string var.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mod = (await import(/* @vite-ignore */ mermaidUrl)) as any;
+        const mermaid = mod.default as MermaidAPI;
 
         if (cancelled) return;
 
@@ -220,7 +211,7 @@ function RouteComponent() {
             <Markdown
               remarkPlugins={[remarkGfm]}
               components={{
-                pre: CodeBlock,
+                code: MermaidOrCode,
               }}
             >
               {project.content}
